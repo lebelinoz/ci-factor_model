@@ -17,9 +17,9 @@ secIdList <- c(1572,1676) # BHP & ANZ
 ### STEP 2: GET RETURN DATA FROM THE DATABASE AT THE DESIRED FREQUENCY
 # Make a sql statement which looks like this:  EXEC PCI_REPORTING.dbo.get_performance_chart @sec_id_list = '1676,2604' , @currency='AUD', @frequency='Weekly'frequency <- "Weekly"
 secIdList_AsString <- paste(secIdList, collapse=",")
-sql_returns = paste("EXEC PCI_REPORTING.dbo.get_performance_chart @sec_id_list = '",
+sql_returns = paste("EXEC PCI_CORE.dbo.get_price_chart @secIds = '",
                     secIdList_AsString,
-                    "', @currency='",
+                    "', @months = 240, @currency='",
                     currency,
                     "', @frequency='",
                     frequency,
@@ -28,7 +28,7 @@ sql_returns = paste("EXEC PCI_REPORTING.dbo.get_performance_chart @sec_id_list =
 raw_returns <- sqlQuery(conn, sql_returns)
 
 # There is a "missing" column in raw_returns which we can ignore
-raw_returns[,"missing"] <- list(NULL)
+#raw_returns[,"missing"] <- list(NULL)
 
 # Keep only dates between max_date and min_date
 raw_returns = raw_returns[which(as.Date(raw_returns$Date) >= min_date & as.Date(raw_returns$Date) <= max_date),]
