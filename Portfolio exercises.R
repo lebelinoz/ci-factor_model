@@ -20,3 +20,25 @@ sig.p.x = sqrt(sig2.p.x)
 y.vec = c(0.8, 0.4, -0.2)
 names(y.vec) = asset.names
 sig.xy = t(x.vec) %*% sigma.mat %*% y.vec
+
+# Example 4:
+#  Find the global minimum variance portfolio
+top.mat = cbind(2*sigma.mat, rep(1,3))
+bot.vec = c(rep(1,3), 0)
+Am.mat = rbind(top.mat, bot.vec)  # <-- the covariance matrix with an extra row of ones, then an extra column of ones with a zero at the bottom
+b.vec = c(rep(0,3), 1)            # <-- the vector we want to solve for.
+z.m.mat = solve(Am.mat)%*%b.vec
+m.vec = z.m.mat[1:3,1]            # <-- this is the weights of the three stocks in our minimum variance portfolio
+mu.gmin = as.numeric(crossprod(m.vec, mu.vec))
+
+sig2.gmin = as.numeric(t(m.vec) %*% sigma.mat %*% m.vec)
+sig.gmin = sqrt(sig2.gmin)
+
+# Example 5:
+#  Find global minimum variance again, with slightly easier calcs:
+one.vec = rep(1,3)
+sigma.inv.mat = solve(sigma.mat)
+top.mat = sigma.inv.mat %*% one.vec
+bot.val = as.numeric(t(one.vec) %*% sigma.inv.mat %*% one.vec)
+m.mat = top.mat / bot.val
+m.mat[,1]  # <-- the weights, again.
