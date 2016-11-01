@@ -41,4 +41,8 @@ sigma.inv.mat = solve(sigma.mat)
 top.mat = sigma.inv.mat %*% one.vec
 bot.val = as.numeric(t(one.vec) %*% sigma.inv.mat %*% one.vec)
 m.mat = top.mat / bot.val
-m.mat[,1]  # <-- the weights, again.
+m.mat[, 1] # <-- the weights, again.
+
+# Example 6:
+#  Find the efficient portfolio with the same expected return as Microsoft
+
