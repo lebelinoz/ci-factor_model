@@ -17,3 +17,7 @@ rownames(mpg)
 summary(mpg)
 
 # convert data to "litres for 100 km"
+
+
+# Section 2.3
+ggplot(mpg, aes(x = displ, y = hwy)) + geom_point()
