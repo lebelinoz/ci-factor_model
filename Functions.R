@@ -43,7 +43,6 @@ rolling_correlation = function(xts1, xts2, width)
   return(return_xts)
 }
 
-
 # Flatten xts to a data.frame
 flatten_xts = function(my_xts, value_name, bucket_name)
 {
@@ -51,15 +50,16 @@ flatten_xts = function(my_xts, value_name, bucket_name)
     df = data.frame(date = index(my_xts), price = coredata(my_xts[, first_name]), currency = rep(first_name, dim(my_xts)[1]))
     names(df) = c("date", value_name, bucket_name)
     rownames(df) = NULL
-    for (i in 2:dim(my_xts)[2]) {
-        ccy = colnames(my_xts)[i]
-        df2 = data.frame(date = index(my_xts), price = coredata(my_xts[, ccy]), currency = rep(ccy, dim(my_xts)[1]))
-        names(df2) = c("date", value_name, bucket_name)
-        df = rbind(df, df2)
+    if (dim(my_xts)[2] > 1) {
+        for (i in 2:dim(my_xts)[2]) {
+            ccy = colnames(my_xts)[i]
+            df2 = data.frame(date = index(my_xts), price = coredata(my_xts[, ccy]), currency = rep(ccy, dim(my_xts)[1]))
+            names(df2) = c("date", value_name, bucket_name)
+            df = rbind(df, df2)
+        }
     }
     return(df)
 }
-
 
 # Copied from http://stackoverflow.com/questions/8979241/can-i-write-an-xts-object-using-write-csv-in-r
 write.zoo = function(x, file = "", index.name = "Index", row.names = FALSE, col.names = NULL, ...) 
