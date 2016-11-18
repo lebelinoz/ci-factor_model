@@ -70,6 +70,6 @@ write.zoo = function(x, file = "", index.name = "Index", row.names = FALSE, col.
     stopifnot(all(names(dx) != index.name))
     dx[[index.name]] <- index(x)
     dx <- dx[, c(ncol(dx), 1:(ncol(dx) - 1))]
-    write.table(dx, file = file, row.names = row.names, col.names = col.names,
+    write.table(dx, file = file, sep = ",", row.names = row.names, col.names = col.names,
         ...)
 }
