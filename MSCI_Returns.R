@@ -1,50 +1,36 @@
 ###########################################################################
 ## MSCI AC World volatility in different currencies
 ###########################################################################
-
 # Preamble
 library(ggplot2)
-library(xts)                    # <-- time series class used in our favourite quant packages
-# library(quantmod)             # <-- for converting daily prices to weekly/monthly returns
-library(RODBC)                  # <-- to grab SQL data from our database
-library(lubridate)              # <-- because  R gets confused with dates, treating some as POSIXct and others not, and can't compare them.
-library(roll)                   # <-- contains some rolling correlation, mean and standard deviation functions
-library(PerformanceAnalytics)   # <-- has a potentially useful Return.cumulative function
-library(zoo)                    # <-- I like giraffes
-# source('Functions.R')         # <-- put all your functions in one place
+library(lubridate) # <-- because  R gets confused with dates, treating some as POSIXct and others not, and can't compare them.
+library(roll) # <-- contains some rolling correlation, mean and standard deviation functions
+library(scales) # <-- a ggplot2 thing for formatting axis
+library(readxl) # <-- for getting data out of Excel
+library(PerformanceAnalytics) # <-- has a potentially useful Return.cumulative function
+source('Functions.R') # <-- put all your functions in one place
+source('Sql_Wrapper.R') # <-- put all your functions in one place
 
 index_code = 'MSCIWORLDG'
 currencies = c("USD", "EUR", "JPY", "GBP", "AUD")
 max_date = as.Date('2016-10-31')
-min_date = as.Date('2011-10-31')  # <-- both years, 31 October fell on a Monday.
+min_date = as.Date('2000-12-31') # <-- both years, 31 October fell on a Monday.
 
-#####################################
-## SQL SQL SQL SQL SQL SQL SQL SQL ##
-# Retrieve the benchmark returns for the given currency
-get_benchmark_xts_returns = function(benchmark_code, ccy) {
-    conn <- odbcConnect(dsn="CISMPRDSVR")
-
-    # Benchmark returns in different currencies
-    sqlReturns = paste("EXEC PCI_REPORTING.dbo.get_benchmark_chart @benchmark = '", benchmark_code, "', @ccy = '", ccy, "', @months_horizon = 72, @frequency = 'Daily'", sep = "")
-    raw_returns_data = sqlQuery(conn, sqlReturns)
-    raw_returns_data[, "Date"] = as_date(raw_returns_data[, "Date"]) # <-- R gets confused by SQL dates.  Fix this.
-    xts_returns = as.xts(raw_returns_data[, "Total Return"], order.by = raw_returns_data[, "Date"])
-    colnames(xts_returns) = ccy
-
-    odbcClose(conn)
-    return(xts_returns)
-}
-## SQL SQL SQL SQL SQL SQL SQL SQL ##
-#####################################
-
+#############################################################
+## SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL ##
 # Create a big xts crosstab of the benchmark returns in different currencies:
 index_return = get_benchmark_xts_returns(index_code, "Local")
+index_return_monthly = get_benchmark_xts_returns(index_code, "Local", "Monthly")
 for (ccy in currencies) {
     index_return = merge(index_return, get_benchmark_xts_returns(index_code, ccy))
+    index_return_monthly = merge(index_return_monthly, get_benchmark_xts_returns(index_code, ccy, "Monthly"))
 }
+## SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL SQL ##
+#############################################################
 
 # Only keep the returns over the requested period (as determined by min_date and max_date, above)
 index_return = index_return[which(index(index_return) > min_date & index(index_return) <= max_date),]
+index_return_monthly = index_return_monthly[which(index(index_return_monthly) > min_date & index(index_return_monthly) <= max_date),]
 
 # Recreate normalised prices in an xts
 index_price = xts(100, min_date)
@@ -60,37 +46,95 @@ for (i in 1:dim(index_return)[1]) {
 
 # Plot the prices just given
 # ...first by creating a dataframe
-####df = data.frame(date = index(index_price), price = coredata(index_price[, "Local"]), currency = rep("Local", dim(index_price)[1]))
-####names(df) = c("date", "price", "currency")
-####rownames(df) = NULL
-####for (ccy in currencies) {
-    ####df2 = data.frame(date = index(index_price), price = coredata(index_price[, ccy]), currency = rep(ccy, dim(index_price)[1]))
-    ####names(df2) = c("date", "price", "currency")
-    ####df = rbind(df, df2)
-####}
 df = flatten_xts(index_price, "price", "currency")
 
 # ...next by ggplot on the dataframe
-ggplot(df, aes(x = date, y = price, colour = currency)) + geom_line()
-
-# Let's compute rolling standard deviations:
-vol1y = roll_sd(index_return, width = 252)
-vol1y = vol1y[which(!is.na(vol1y[, "Local"]))]
-vol1y_df = flatten_xts(vol1y, "vol", "currency")
-ggplot(vol1y_df, aes(x = date, y = vol, colour = currency)) + geom_line()
-
-vol3y = roll_sd(index_return, width = 3 * 252)
-vol3y = vol3y[which(!is.na(vol3y[, "Local"]))]
-vol3y_df = flatten_xts(vol3y, "vol", "currency")
-ggplot(vol3y_df, aes(x = date, y = vol, colour = currency)) + geom_line()
-
-vol5y = roll_sd(index_return, width = 5 * 252)
-vol5y = vol5y[which(!is.na(vol5y[, "Local"]))]
-vol5y_df = flatten_xts(vol5y, "vol", "currency")
-ggplot(vol5y_df, aes(x = date, y = vol, colour = currency)) + geom_line()
+price_plot = ggplot(df, aes(x = date, y = price, colour = currency)) 
+price_plot = price_plot + geom_line(size = 1) 
+price_plot = price_plot + ggtitle("MSCI AC World - Total Returns by currency")
+ggsave("C:/Temp/index_price.png")
+write.zoo(index_price, "C:/Temp/index_price.csv")
+write.zoo(index_return, "C:/Temp/index_return.csv")
 
 
-write.zoo(index_price, "C:/Temp/index_price.csv", sep = ",")
-write.zoo(vol1y, "C:/Temp/vol1y.csv", sep = ",")
-write.zoo(vol3y, "C:/Temp/vol3y.csv", sep = ",")
-write.zoo(vol5y, "C:/Temp/vol5y.csv", sep = ",")
+# Create the volatility charts and output:
+do_vol_outputs = function(return_xts, periods_per_year, years_to_roll, entity_name, title) {
+    vol = roll_sd(return_xts, width = periods_per_year * years_to_roll)
+    vol = vol[which(!is.na(vol[, 1]))]
+    vol = vol * sqrt(periods_per_year) # Annualise
+    vol_df = flatten_xts(vol, "vol", "currency")
+    dev.set(which = 3)
+    x = ggplot(vol_df, aes(x = date, y = vol, colour = currency))
+    x = x + geom_line(size = 1)
+    x = x + ggtitle(title)
+    x = x + scale_y_continuous(breaks = c(NA, 0.1, 0.2, 0.3, 0.4, NA), labels = percent, limits = c(0, 0.5))
+    ggsave(paste("C:/Temp/", entity_name, ".png", sep = ""))
+    write.zoo(vol, paste("C:/Temp/", entity_name, ".csv", sep = ""))
+    return(x)
+}
+
+# Create vol plots and save them as png files.  Also save raw data in CSV files:
+vol1_chart = do_vol_outputs(index_return, 252, 1, "vol1y", "MSCI AC World - Rolling 1y standard deviation of returns by currency")
+vol3_chart = do_vol_outputs(index_return, 252, 3, "vol3y", "MSCI AC World - Rolling 3y standard deviation of returns by currency")
+vol5_chart = do_vol_outputs(index_return, 252, 5, "vol5y", "MSCI AC World - Rolling 5y standard deviation of returns by currency")
+vol5m_chart = do_vol_outputs(index_return_monthly, 12, 5, "vol5y_monthly", "MSCI AC World - Rolling 5y standard deviation of (monthly) returns by currency")
+
+# Output to the ide
+dev.set(3) # Set the output environment to be the ide
+price_plot
+vol1_chart
+vol3_chart
+vol5_chart
+vol5m_chart
+
+##############################################################
+## PCGLOB vs PCGLUF ## PCGLOB vs PCGLUF ## PCGLOB vs PCGLUF ##
+excel_path = "M:/Staff Folders/Alain LeBel/GLUF  GLOB  - performance in AUD 20161121.xlsx" 
+
+options(warn = -1) # <-- warnings off:  I don't care if there are some blank rows in the data
+pc_daily = read_excel(excel_path, sheet = "Daily")
+options(warn = 0) # <- warnings back on
+pc_daily = pc_daily[which(!is.na(pc_daily[, "date"])),] # <-- because a few empty rows are cluttering up the data
+
+pc_monthly = read_excel(excel_path, sheet = "Monthly")
+pc_monthly = pc_monthly[which(!is.na(pc_monthly[, "PCGLUF"])),] # <-- let's only keep the rows where we have data for both PCGLUF and PCGLOB
+
+
+pc_daily[, "date"] = as_date(pc_daily[, "date"]) # <-- R gets confused by .csv dates.  Fix this.
+pc_monthly[, "date"] = as_date(pc_monthly[, "date"])
+
+pc_daily_returns = as.xts(pc_daily[, "PCGLOB"], order.by = pc_daily[, "date"])
+pc_daily_returns = merge(pc_daily_returns, as.xts(pc_daily[, "PCGLUF"], order.by = pc_daily[, "date"]))
+colnames(pc_daily_returns) = c("GLOB", "GLUF")
+
+pc_monthly_returns = as.xts(pc_monthly[, "PCGLOB"], order.by = pc_monthly[, "date"])
+pc_monthly_returns = merge(pc_monthly_returns, as.xts(pc_monthly[, "PCGLUF"], order.by = pc_monthly[, "date"]))
+colnames(pc_monthly_returns) = c("GLOB", "GLUF")
+
+# Output chart (similar to above but with slightly different axis scale
+vol = roll_sd(pc_daily_returns, width = 252)
+vol = vol[which(!is.na(vol[, "GLOB"]))]
+vol = vol * sqrt(252) # Annualise
+vol_df = flatten_xts(vol, "vol", "portfolio")
+pc_daily_chart = ggplot(vol_df, aes(x = date, y = vol, colour = portfolio))
+pc_daily_chart = pc_daily_chart + geom_line(size = 1)
+pc_daily_chart = pc_daily_chart + ggtitle("GLOB & GLUF - Rolling 1y standard deviation of daily returns")
+pc_daily_chart = pc_daily_chart + scale_y_continuous(labels = percent, limits = c(0.08, 0.16))
+dev.set(3)
+print(pc_daily_chart)
+ggsave(paste("C:/Temp/pc_daily.png", sep = ""))
+write.zoo(vol, paste("C:/Temp/pc_daily.csv", sep = ""))
+
+
+volm = roll_sd(pc_monthly_returns, width = 12 * 5)
+volm = volm[which(!is.na(volm[, "GLOB"]))]
+volm = volm * sqrt(12) # Annualise
+vol_df = flatten_xts(volm, "volm", "portfolio")
+pc_monthly_chart = ggplot(vol_df, aes(x = date, y = volm, colour = portfolio))
+pc_monthly_chart = pc_monthly_chart + geom_line(size = 1)
+pc_monthly_chart = pc_monthly_chart + ggtitle("GLOB & GLUF - Rolling 5y standard deviation of monthly returns")
+pc_monthly_chart = pc_monthly_chart + scale_y_continuous(labels = percent, limits = c(0.08, 0.16))
+dev.set(3)
+print(pc_monthly_chart)
+ggsave(paste("C:/Temp/pc_monthly.png", sep = ""))
+write.zoo(volm, paste("C:/Temp/pc_monthly.csv", sep = ""))

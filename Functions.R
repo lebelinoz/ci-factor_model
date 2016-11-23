@@ -1,3 +1,7 @@
+library(xts) # <-- time series class used in our favourite quant packages
+library(zoo) # <-- another useful time series class
+
+
 # Convert price series into daily/weekly/monthly returns
 xts_returns = function(frequency, given_xts, min_date, max_date)
 {

@@ -14,10 +14,10 @@ source('Sql_Wrapper.R')
 
 # Preamble
 max_date = as.Date('2016-10-31')
-min_date = as.Date('2004-03-30')
-spc_id_list = c(110, 91, 111) # c(92, 91, 112) # 
+min_date = as.Date('2001-03-30')
+spc_id_list =  c(113, 91, 114) # c(110, 91, 111) # c(92, 91, 112) # 
 pfolio_names = c("Red_Flag", "Control", "ex_Red_Flag")
-title = "PROBM 20%"
+title = "PROBM 30%"
 
 #benchmark_sec_id = "ASX200"
 
