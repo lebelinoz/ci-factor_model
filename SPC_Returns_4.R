@@ -1,11 +1,8 @@
 ###########################################################################
 ## spc returns
 ###########################################################################
-
 # Libraries
 library(ggplot2)
-library(xts) # <-- time series class used in our favourite quant packages
-library(zoo) # <-- another time series class
 library(lubridate) # <-- because R gets confused with dates, treating some as POSIXct and others not, and can't compare them.
 library(roll) # <-- contains some rolling correlation, mean and standard deviation functions
 library(PerformanceAnalytics) # <-- has a potentially useful Return.cumulative function
