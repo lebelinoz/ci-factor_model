@@ -13,8 +13,6 @@ spc_id_list =  c(50) # c(113, 91, 114) # c(110, 91, 111) # c(92, 91, 112) #
 pfolio_names = spc_id_list # c("ASX200_PROBM_candidates") # c("Red_Flag", "Control", "ex_Red_Flag")
 title = "Monthly vs Daily"
 
-#benchmark_sec_id = "ASX200"
-
 ###############################
 ## MONTHLY RETURNS & PRICES  ##
 # Create a big xts crosstab of the benchmark returns in different currencies:
@@ -50,9 +48,9 @@ colnames(pfolio_price) = pfolio_names
 
 ###############################
 ##  DAILY RETURNS & PRICES   ##
-pfolio_return_daily = get_spc_xts_returns_daily(spc_id_list[1])
+pfolio_return_daily = get_spc_xts_raw_total_returns(spc_id_list[1])
 for (spc_id in spc_id_list[-1]) {
-    pfolio_return_daily = merge(pfolio_return_daily, get_spc_xts_returns_daily(spc_id))
+    pfolio_return_daily = merge(pfolio_return_daily, get_spc_xts_raw_total_returns(spc_id))
 }
 colnames(pfolio_return_daily) = pfolio_names
 
