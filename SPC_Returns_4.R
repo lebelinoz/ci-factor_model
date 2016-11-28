@@ -26,22 +26,7 @@ colnames(pfolio_return) = pfolio_names
 pfolio_return = pfolio_return[which(index(pfolio_return) > min_date & index(pfolio_return) <= max_date),]
 
 # Recreate normalised prices in an xts
-pfolio_price = xts(100, min_date)
-if (dim(pfolio_return)[2] > 1) {
-    for (i in 2:dim(pfolio_return)[2]) {
-        pfolio_price = merge(pfolio_price, xts(100, min_date))
-    }
-}
-colnames(pfolio_price) = colnames(pfolio_return)
-
-if (dim(pfolio_return)[1] > 1) {
-    for (i in 1:dim(pfolio_return)[1]) {
-        d = index(pfolio_return)[i]
-        singleton = zoo(100 * (1 + Return.cumulative(pfolio_return[which(index(pfolio_return) <= d),])), d)
-        pfolio_price = rbind(pfolio_price, as.xts(singleton))
-    }
-}
-colnames(pfolio_price) = pfolio_names
+pfolio_price = xts_price_from_returns(pfolio_return, min_date)
 ## MONTHLY RETURNS & PRICES  ##
 ###############################
 
@@ -58,22 +43,7 @@ colnames(pfolio_return_daily) = pfolio_names
 pfolio_return_daily = pfolio_return_daily[which(index(pfolio_return_daily) > min_date & index(pfolio_return_daily) <= max_date),]
 
 # Recreate normalised prices in an xts
-pfolio_price_daily = xts(100, min_date)
-if (dim(pfolio_return_daily)[2] > 1) {
-    for (i in 2:dim(pfolio_return_daily)[2]) {
-        pfolio_price_daily = merge(pfolio_price_daily, xts(100, min_date))
-    }
-}
-colnames(pfolio_price_daily) = colnames(pfolio_return_daily)
-
-if (dim(pfolio_return_daily)[1] > 1) {
-    for (i in 1:dim(pfolio_return_daily)[1]) {
-        d = index(pfolio_return_daily)[i]
-        singleton = zoo(100 * (1 + Return.cumulative(pfolio_return_daily[which(index(pfolio_return_daily) <= d),])), d)
-        pfolio_price_daily = rbind(pfolio_price_daily, as.xts(singleton))
-    }
-}
-colnames(pfolio_price_daily) = pfolio_names
+pfolio_price_daily = xts_price_from_returns(pfolio_return_daily, min_date)
 ##  DAILY RETURNS & PRICES   ##
 ###############################
 

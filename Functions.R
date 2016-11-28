@@ -1,7 +1,6 @@
 library(xts) # <-- time series class used in our favourite quant packages
 library(zoo) # <-- another useful time series class
 
-
 # Convert price series into daily/weekly/monthly returns
 xts_returns = function(frequency, given_xts, min_date, max_date)
 {
@@ -26,6 +25,27 @@ xts_returns = function(frequency, given_xts, min_date, max_date)
   }
   temp = temp[rowSums(is.na(temp)) != ncol(temp)]  # <-- remove rows which are all NA
   return(temp)
+}
+
+# Convert return series into normalised prices, with a 100 start price at the given min_date
+xts_price_from_returns = function(xts_return, min_date) 
+{ 
+    xts_price = xts(100, min_date)
+    if (dim(xts_return)[2] > 1) {
+        for (i in 2:dim(xts_return)[2]) {
+            xts_price = merge(xts_price, xts(100, min_date))
+        }
+    }
+    
+    if (dim(xts_return)[1] > 1) {
+        for (i in 1:dim(xts_return)[1]) {
+            d = index(xts_return)[i]
+            singleton = zoo(100 * (1 + Return.cumulative(xts_return[which(index(xts_return) <= d),])), d)
+            xts_price = rbind(xts_price, as.xts(singleton))
+        }
+    }
+    colnames(xts_price) = colnames(xts_return)
+    return(xts_price)
 }
 
 # Compute the average time series from a collection time series, excluding specified columns. 

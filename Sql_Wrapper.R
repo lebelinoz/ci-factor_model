@@ -19,9 +19,9 @@ get_spc_xts_returns = function(spc_id) {
 }
 
 # Retrieve the daily returns for the given spc portfolio
-get_spc_xts_raw_total_returns = function(spc_id, frequency = "daily") {
+get_spc_xts_raw_total_returns = function(spc_id, frequency = "daily", currency = "AUD") {
     frequency = tolower(frequency)
-    sqlReturns = paste("EXEC PCI_REPORTING.dbo.calc_spc_", frequency, "_returns @spc_id = ", spc_id, sep = "")
+    sqlReturns = paste("EXEC PCI_REPORTING.dbo.calc_spc_", frequency, "_returns @spc_id = ", spc_id, ", @currency = '", currency, "'", sep = "")
     raw_returns_data = get_table_from_sql_CISMPRDSVR(sqlReturns)
     raw_returns_data[, "date"] = as_date(raw_returns_data[, "date"]) # <-- R gets confused by SQL dates.  Fix this.
     xts_returns = as.xts(raw_returns_data[, "daily_return"], order.by = raw_returns_data[, "date"])
