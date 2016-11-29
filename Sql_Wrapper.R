@@ -19,7 +19,7 @@ get_spc_xts_returns = function(spc_id) {
 }
 
 # Retrieve the daily returns for the given spc portfolio
-get_spc_xts_raw_total_returns = function(spc_id, frequency = "daily", currency = "AUD") {
+get_spc_xts_raw_total_returns = function(spc_id, currency = "AUD", frequency = "daily") {
     frequency = tolower(frequency)
     sqlReturns = paste("EXEC PCI_REPORTING.dbo.calc_spc_", frequency, "_returns @spc_id = ", spc_id, ", @currency = '", currency, "'", sep = "")
     raw_returns_data = get_table_from_sql_CISMPRDSVR(sqlReturns)
