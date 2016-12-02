@@ -1,5 +1,5 @@
 library(rattle)
-# library(rpart, quietly = TRUE) <-- required to do trees without rattle
+library(rpart) # <-- required to do trees without rattle
 # library(gridExtra) # <-- required by rattle to create some charts
 library(ggplot2)
 source('Sql_Wrapper.R')
@@ -14,6 +14,10 @@ watchlist = get_table_from_sql_CISMPRDSVR(sql_query)
 
 watchlist[, "O_"] = paste('O', watchlist$O, sep = "")
 watchlist[, "F_"] = paste('F', watchlist$F, sep = "")
+watchlist[, "O_1M_chg_"] = paste('O_1M_chg_', watchlist$O_1M_chg, sep = "")
+watchlist[, "O_3M_chg_"] = paste('O_3M_chg_', watchlist$O_3M_chg, sep = "")
+watchlist[, "F_1M_chg_"] = paste('F_1M_chg_', watchlist$F_1M_chg, sep = "")
+watchlist[, "F_3M_chg_"] = paste('F_3M_chg_', watchlist$F_3M_chg, sep = "")
 
 # As a first experiment, let's concentrate on the watchlist as of 30 November 2011
 # By this point, the relatively new O & F scores would have settled, and we have 12M returns to play with
@@ -21,10 +25,14 @@ watchlist_201511 = watchlist[which(watchlist$month_code == 'P2015M11'),c("ticker
 watchlist_201511 = watchlist_201511[which(!is.na(watchlist_201511[, "return_12M"])),]
 
 # Also, let's see about predicting 1M returns
-watchlist_1M = watchlist[which(!is.na(watchlist[, "return_1M"])), c("ticker", "watchlist", "V", "O_", "F_", "return_1M")]
+watchlist_1M = watchlist[which(!is.na(watchlist[, "return_1M"])), 
+    c("ticker", "watchlist", "V", "O_", "O_1M_chg_", "O_3M_chg_", "F_", "F_1M_chg_", "F_3M_chg_", "return_1M", "return_3M", "ret_minus_1M", "ret_minus_3M")]
 
 rattle()
 
+###########################################################################################
+## 12 MONTH RETURNS BASED ON V, O & F SCORES
+##
 ## Discovery on 1-year data (Nov 2015 to Nov 2016) on all 202 Watchlist RL1 stocks:
 ##  Best results with the 28 stocks which have O score 4 or 5.  Better still with even-numbered F scores
 ##  Of the 174 remaining stocks, favour O score of 3 (88 stocks) over O score of 1 or 2 (86).
@@ -38,9 +46,9 @@ decision_tree = rpart(return_12M ~ ., data = watchlist_201511[, c("V", "O_", "F_
     method = "anova", parms = list(split = "information"), control = rpart.control(usesurrogate = 0, maxsurrogate = 0))
 decision_tree_title = "Decision Tree - watchlist RL1 (Global & Domestic) as of Nov 2015 - predict 12m return"
 
-# Display (looks rubbish):
-plot(decision_tree, uniform = TRUE, main = decision_tree_title)
-text(decision_tree, use.n = TRUE, all = TRUE)
+## Display (looks rubbish):
+#plot(decision_tree, uniform = TRUE, main = decision_tree_title)
+#text(decision_tree, use.n = TRUE, all = TRUE)
 
 # Nice display (requires rattle):
 fancyRpartPlot(decision_tree, main = "Decision Tree - watchlist RL1 (Global & Domestic) as of Nov 2015 - predict 12m return")
@@ -56,5 +64,14 @@ ggplot(watchlist_201511, aes(y = return_12M)) +
 theme(legend.position = "none")
 
 # Distribution of O & F
-ggplot(watchlist_201511, aes(O_)) + geom_bar()
-ggplot(watchlist_201511, aes(F_)) + geom_bar()
+ggplot(watchlist_201511, aes(O_, fill = watchlist)) + geom_bar()
+ggplot(watchlist_201511, aes(F_, fill = watchlist)) + geom_bar()
+##
+## 12 MONTH RETURNS BASED ON V, O & F SCORES
+###########################################################################################
+
+
+#######################################################################################
+## 1 MONTH RETURNS BASED ON V+O+F SCORES AND THE CHANGES TO THE SCORES
+summary(watchlist_1M$O_1M_chg_)
+ggplot(watchlist_1M[which(watchlist_1M$O_1M_chg_ != 'O_1M_chg_0' && watchlist_1M$O_1M_chg_ != 'O_1M_chg_0'),], aes(O_1M_chg_, fill = watchlist)) + geom_bar()
