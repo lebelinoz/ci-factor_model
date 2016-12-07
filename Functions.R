@@ -97,3 +97,20 @@ write.zoo = function(x, file = "", index.name = "Index", row.names = FALSE, col.
     write.table(dx, file = file, sep = ",", row.names = row.names, col.names = col.names,
         ...)
 }
+
+df_to_xts = function(raw_data, date_name = "Date", group_name = "Ticker", metric_name = "Price", debug = 0) 
+{ 
+    ticker_list = as.vector(unique(raw_data[, group_name]))
+    if (length(ticker_list) == 0) { return }
+    ticker = ticker_list[1]
+    this_which = which(raw_data[,group_name] == ticker)
+    xts_return_index = as.xts(raw_data[this_which, metric_name], order.by = raw_data[this_which, date_name])
+    if (length(ticker_list) > 1) {
+        for (ticker in ticker_list[-1]) {
+            this_which = which(raw_data[, group_name] == ticker)
+            xts_return_index = merge(xts_return_index, as.xts(raw_data[this_which, metric_name], order.by = raw_data[this_which, date_name]))
+        }
+    }
+    colnames(xts_return_index) = ticker_list
+    return(xts_return_index)
+}

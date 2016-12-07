@@ -60,7 +60,7 @@ ggplot(watchlist_201511, aes(y = return_12M)) +
   geom_boxplot(aes(x = O_, fill = O_), notch = FALSE) +
   stat_summary(aes(x = O_), fun.y = mean, geom = "point", shape = 8) +
   xlab("O_\n\nRattle 2016-Dec-02 15:28:56 alebel") +
-  ggtitle("Distribution of return_12M\nby O_") +
+  ggtitle("Distribution of 12M total return\nby O Score") +
 theme(legend.position = "none")
 
 # Distribution of O & F

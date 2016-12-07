@@ -2,20 +2,18 @@
 ## spc risk
 ###########################################################################
 # Libraries
-library(ggplot2)
-library(PerformanceAnalytics) # <-- has a potentially useful Return.cumulative function
-source('Functions.R') # <-- put all your functions in one place
+source('StockPlot.R') # <-- put all your functions in one place
 source('Sql_Wrapper.R')
 spc_ref_table = get_table_from_sql_CISMPRDSVR("SELECT * FROM PCI_REPORTING.dbo.t_spc_ref_portfolio")
 
 # Preamble
-min_date = as.Date('2001-03-31')
-max_date = as.Date('2016-03-31')
+min_date = as.Date('2013-10-31')
+max_date = as.Date('2016-10-31')
 benchmark_name = "XJO" # "MSCIAexJP" # "MSCIWORLD"
 currency = "AUD"
 frequency = "Monthly"
 title_tail = paste("(", currency, ", ", frequency, ")", sep = "")
-spc_id_list = c(91,110,111) # 132:139 # 132:139 # 93:98 # c(91, 113, 114) # c(91, 110, 111) #  
+spc_id_list = c(117, 123, 140) # 132:139 # 132:139 # 93:98 # c(91, 113, 114) # c(91, 110, 111) #  
 
 # Label the synthetic portfolios with spc_code:
 spc_id_list = sort(spc_id_list)
@@ -41,56 +39,10 @@ bmark_return = bmark_return[which(index(bmark_return) > min_date & index(bmark_r
 pfolio_price = xts_price_from_returns(pfolio_return, min_date)
 bmark_price = xts_price_from_returns(bmark_return, min_date)
 
-# Plot the prices:
-price_plot = function(xts_pfolio_price, xts_bmark_price, chart_title) 
-{ 
-    df = flatten_xts(xts_pfolio_price, "price", "spc_id")
-    df = rbind(df, flatten_xts(xts_bmark_price, "price", "spc_id"))
-    x = ggplot(df, aes(x = date, y = price, colour = spc_id, fill = spc_id))
-    x = x + geom_line(size = 1) 
-    x = x + ggtitle(chart_title)
 
-    # Legend:  on the bottom with no title
-    x = x + theme(legend.position = "bottom")
-    x = x + theme(legend.title = element_blank())
-
-    # remove x-axis labels and y-axis labels:
-    x = x + theme(axis.title.x = element_blank())
-    x = x + theme(axis.title.y = element_blank())
-    return(x)
-}
-
-# Plot the relative returns:
-rel_plot = function(xts_pfolio_return, xts_bmark_return, chart_title) 
-{
-    # Compute relative returns
-    xts_relative = Return.relative(xts_pfolio_return, xts_bmark_return)
-
-    # The series names all have a "/[benchmark name]" in the title, which looks clunky.  Rename
-    colnames(xts_relative) = colnames(xts_pfolio_return)
-
-    # Flatten and chart:
-    dfRel = flatten_xts(xts_relative, "rel_return", "spc_id")
-    x = ggplot(dfRel, aes(x = date, y = rel_return, colour = spc_id, fill = spc_id)) 
-    x = x + geom_line(size = 1) 
-    x = x + ggtitle(paste(chart_title, "relative return"))
-
-    # Legend:  omit if there is only one element.  Otherwise, show at the bottom without a title
-    if (dim(xts_relative)[2] == 1) {
-        x = x + theme(legend.position = "none")
-    } else {
-        x = x + theme(legend.position = "bottom")
-        x = x + theme(legend.title = element_blank())
-    }
-
-    # remove x-axis labels and y-axis labels:
-    x = x + theme(axis.title.x = element_blank())
-    x = x + theme(axis.title.y = element_blank())
-    return(x)
-}
-
-probm_price_plot = price_plot(pfolio_price, bmark_price, "PROBM Baskets and ASX 200 total returns")
-probm_rel_plot = rel_plot(pfolio_return[,2:3], pfolio_return[,1], paste("ASX 200 PROBM best & worst baskets vs all PROBM candidates since 2001 - excludes Financials and Infrastructure", title_tail))
+probm_price_plot = price_plot(pfolio_price, bmark_price, "ASX 200 and Domestic Stalwarts")
+probm_rel_plot = rel_plot(pfolio_return[, 1:3], bmark_return, paste("ASX 200 and Domestic Stalwarts relative actual ASX 200", title_tail))
+probm_rel_plot2 = rel_plot(pfolio_return[, 1:2], pfolio_return[,3], paste("ASX 200 and Domestic Stalwarts relative spc ASX 200", title_tail))
 
 
 # Price plots
@@ -109,6 +61,7 @@ probm_rel_plot = rel_plot(pfolio_return[,2:3], pfolio_return[,1], paste("ASX 200
 dev.set(3)
 probm_price_plot
 probm_rel_plot
+probm_rel_plot2
 
 #msci_price_plot
 #watchlist_price_plot
@@ -129,9 +82,10 @@ probm_rel_plot
 
 # Some Performance Analytics stuff:
 
-#table.SFM(pfolio_return, bmark_return)
+table.SFM(pfolio_return, bmark_return)
+table.SFM(pfolio_return, pfolio_return[,3])
 #TotalRisk(pfolio_return, bmark_return)
 
 ## Output our two returns arrays
-#write.zoo(pfolio_return, "C:/Temp/pfolio_return.csv")
-#write.zoo(bmark_return, "C:/Temp/bmark_return.csv")
+write.zoo(pfolio_return, "C:/Temp/pfolio_return.csv")
+write.zoo(bmark_return, "C:/Temp/bmark_return.csv")

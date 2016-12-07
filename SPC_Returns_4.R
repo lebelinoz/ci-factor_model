@@ -8,10 +8,10 @@ source('Sql_Wrapper.R')
 
 # Preamble
 max_date = as.Date('2016-10-31')
-min_date = as.Date('2013-09-30')
-spc_id_list =  c(50) # c(113, 91, 114) # c(110, 91, 111) # c(92, 91, 112) # 
+min_date = as.Date('2013-10-31')
+spc_id_list =  c(117, 123) # c(113, 91, 114) # c(110, 91, 111) # c(92, 91, 112) # 
 pfolio_names = spc_id_list # c("ASX200_PROBM_candidates") # c("Red_Flag", "Control", "ex_Red_Flag")
-title = "Monthly vs Daily"
+title = "ASX 200 Stalwarts vs "
 
 ###############################
 ## MONTHLY RETURNS & PRICES  ##
