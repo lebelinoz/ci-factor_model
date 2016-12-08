@@ -6,6 +6,7 @@ source('Functions.R') # <-- put all your functions in one place
 price_plot = function(xts_pfolio_price, xts_bmark_price, chart_title) {
     df = flatten_xts(xts_pfolio_price, "price", "spc_id")
     df = rbind(df, flatten_xts(xts_bmark_price, "price", "spc_id"))
+
     x = ggplot(df, aes(x = date, y = price, colour = spc_id, fill = spc_id))
     x = x + geom_line(size = 1)
     x = x + ggtitle(chart_title)

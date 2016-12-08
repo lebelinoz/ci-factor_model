@@ -58,7 +58,7 @@ probm_rel_plot2 = rel_plot(pfolio_return[, 1:2], pfolio_return[,3], paste("ASX 2
 #valSubs_rel_MSCI_plot = rel_plot(pfolio_return[, 3:8], pfolio_return[, 1], paste("Asian Watchlist Value Subsets vs MSCI Asia ex Jp", title_tail))
 
 # Show all plots:
-dev.set(3)
+# dev.set(3)
 probm_price_plot
 probm_rel_plot
 probm_rel_plot2
