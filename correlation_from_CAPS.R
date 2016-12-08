@@ -4,26 +4,27 @@
 ###                             ###
 ###################################
 
-# Parameters:
-portfolio_code = 'PCHEST'
-frequency = "Weekly"
-currency = "AUD"
-old_way = TRUE # referring to the ordering of the columns/rows.  If true, let hierarchical clustering automatically group by euclidian distance.
-min_date = as.Date("2011-10-31") # as.Date("2015-09-29") # 
-max_date = as.Date("2016-10-31")
-
 ### PREAMBLE
-library(RODBC) # <-- for grabbing data straight from our SQL database
+source('Sql_Wrapper.R') # <-- for grabbing data straight from our SQL database
 library(RColorBrewer) # <-- for the customised colour palette which I want to use in the heat map
 library(gplots) # <-- if you want customised heatmaps, use heatmap.2 from the gplots package.
-conn <- odbcConnect(dsn = "CISMPRDSVR")
+
+# Parameters:
+portfolio_code = 'AIA and related'
+frequency = "Daily"
+currency = "USD"
+old_way = TRUE # referring to the ordering of the columns/rows.  If true, let hierarchical clustering automatically group by euclidian distance.
+min_date = as.Date("2011-11-30") # as.Date("2015-09-29") # 
+max_date = as.Date("2016-11-30")
+
 
 ### STEP 1: GET A LIST OF sec_id's (this is the part which will change every time)
 sql_sec_id = paste("select pos.sec_id from t_Ref_Positions_L pos inner join t_Ref_Portfolio pfolio on pos.portfolio_id = pfolio.id where pfolio.fund_code = '",
                    portfolio_code,
                    "' and pos.sec_id is not null",
                    sep = "")
-secIdList <- sqlQuery(conn, sql_sec_id)$sec_id
+sql_sec_id = "SELECT sec_id FROM t_ref_sec WHERE sec_ticker IN ('1299.HK','HSCEI.HK', 'HKHS.HK', 'PRU.GB', 'MFC.US', 'CS.FR', 'AV.GB', 'MET.US', '2318.HK', '2628.HK', '2328.HK', '8750.JP', 'SPBDUSB0.US' )"
+secIdList <- get_table_from_sql_CISMPRDSVR(sql_sec_id)$sec_id
 #secIdList <- c(secIdList, 1234567)  # For fun, let's add the secId of the stock we're thinking of buying
 
 
@@ -38,7 +39,7 @@ sql_returns = paste("EXEC PCI_REPORTING.dbo.get_performance_chart @sec_id_list =
                     frequency,
                     "'",
                     sep = "")
-raw_returns <- sqlQuery(conn, sql_returns)
+raw_returns <- get_table_from_sql_CISMPRDSVR(sql_returns)
 
 # There is a "missing" column in raw_returns which we can ignore
 raw_returns[, "missing"] <- list(NULL)
@@ -52,7 +53,7 @@ raw_returns = raw_returns[which(as.Date(raw_returns$Date) >= min_date & as.Date(
 if (old_way) {
     # Rename the columns to be the ticker, not the sec_id:
     sql_column_names = paste("SELECT sec_id, REPLACE(sec_ticker,'.ASX','') AS [ticker] from PCI_CORE.dbo.t_Ref_Sec WHERE sec_id in (", secIdList_AsString, ")", sep = "")
-    column_names <- sqlQuery(conn, sql_column_names)
+    column_names <- get_table_from_sql_CISMPRDSVR(sql_column_names)
     for (i in 1:length(column_names[, 1])) {
         pair = column_names[i,]
         colnames(raw_returns)[which(colnames(raw_returns) == pair[, 1])] = toString(pair[, 2])
@@ -61,7 +62,7 @@ if (old_way) {
     if (1 == 1 | !exists("expanded_column_names")) # check for existence because the following query is slow (~twenty seconds)
         {
         sql_expanded_column_names = "EXEC PCI_REPORTING.dbo.get_universe"
-        watchlist_data = unique(sqlQuery(conn, sql_expanded_column_names))
+        watchlist_data = unique(get_table_from_sql_CISMPRDSVR(sql_expanded_column_names))
         expanded_column_names = data.frame(
       sec_id = watchlist_data$sec_id,
       title = paste(watchlist_data$Ticker, substr(watchlist_data$ValueSubset, 0, 4), watchlist_data$Country, sep = ", "),
@@ -83,9 +84,6 @@ if (old_way) {
         colnames(raw_returns)[which(colnames(raw_returns) == pair[, 1])] = toString(pair[, 2])
     }
 }
-
-# Close the connection:  we're done with SQL
-odbcClose(conn)
 
 
 ### STEP 3:  Compute correlations and show the heat map
@@ -112,10 +110,10 @@ correlation_matrix = cor(raw_returns[, 2:length(raw_returns)], use = "pairwise.c
 # This is the colour scheme used in the example:
 my_palette <- colorRampPalette(c("red", "yellow", "green"))(n = 299)
 # And this is, I expect what the desired blue-white-red scheme (with correlation -1 blue, and correlation 0 white)
-my_palette <- colorRampPalette(c("blue", "white", "red"))(n = 299)
+my_palette <- colorRampPalette(c("forestgreen", "white", "red"))(n = 299)
 # With this, correlation 0 is blue, correlation 1 is red and correlation 0.5 is white.  Correlation < 0 stands out as 
 zero_correlation_colour <- "forestgreen"
-my_palette <- colorRampPalette(c("yellow", "black", zero_correlation_colour, "white", "red"))(n = 299)
+my_palette <- colorRampPalette(c("blue", "yellow", zero_correlation_colour, "white", "red"))(n = 299)
 # (this last one isn't bad if we set zero_correlation_colour to blue or forestgreen...)
 
 # For labeling purposes, round the values of the correlation matrix.  Cut off leading zeroes
@@ -148,7 +146,7 @@ diag(cor_labels) <- "" # don't bother labeling the diagonal, of course
 
 # Show the chart:
 chart_title = paste("Correlation for ", portfolio_code, " (", frequency, ", ", currency, ") ", min_date, " to ", max_date, sep = "")
-# dev.off()
+dev.off()
 heatmap.2(
   correlation_matrix
   , cellnote = cor_labels # cell labels look roughly the same as the actual numbers, except I've done some number formatting and I've left the diagonal blank
@@ -169,7 +167,7 @@ heatmap.2(
 )
 
 # Export the above chart to PNG in the user's R folder:
-chart_png_filename = paste(chart_title, "png", sep = ".")
+chart_png_filename = paste("C:\\Temp\\", chart_title, ".png", sep = "")
 png(chart_png_filename, width = 850, height = 850)
 heatmap.2(
   correlation_matrix
@@ -191,25 +189,25 @@ heatmap.2(
 )
 dev.off()
 
-# Export the same chart as above to PDF in the user's R folder:
-pdfFilename = paste(chart_title, "pdf", sep = ".")
-pdf(pdfFilename, paper = "a4r") # to export a chart to pdf, use this line first, then create the chart, then go dev.off()
-heatmap.2(
-  correlation_matrix
-  , cellnote = cor_labels # cell labels look roughly the same as the actual numbers, except I've done some number formatting and I've left the diagonal blank
-  , main = chart_title # heat map title
-  , notecol = "black" # change font color of cell labels to black
-  , density.info = "none" # turns off density plot inside color legend
-  , trace = "none" # turns off trace lines inside the heat map
-  , margins = c(12, 9) # widens margins around plot
-  , col = my_palette # use our color palette defined earlier
-  #,breaks=col_breaks     # enable color transition at specified limits # <-- this was an optional thing in the article... Ignoring for now
-  , dendrogram = "none" # the dendogram is the flow chart showing closeness of the rows/columns as measured by hiearchical clustering.  Can be "row", "column", "both" or "none"
-  , Colv = old_way # turn off column clustering
-  , Rowv = old_way # turn off row clustering
-  , key = FALSE # the key is the colour
-  #,lmat=rbind(4:3,2:1)   # the layout of the dendograms (2 & 3), key (4) and actual heatmap (1).
-  , lhei = c(0.95, 4) # the height of the layout parts.  This is the smallest I seem to be able to get the non-heatmap part if there's a title in it
-  , lwid = c(0.25, 4) # the width of the layout parts.  This is the smallest I seem to be able to get the left matter.
-)
-dev.off()
+## Export the same chart as above to PDF in the user's R folder:
+#pdfFilename = paste(chart_title, "pdf", sep = ".")
+#pdf(pdfFilename, paper = "a4r") # to export a chart to pdf, use this line first, then create the chart, then go dev.off()
+#heatmap.2(
+  #correlation_matrix
+  #, cellnote = cor_labels # cell labels look roughly the same as the actual numbers, except I've done some number formatting and I've left the diagonal blank
+  #, main = chart_title # heat map title
+  #, notecol = "black" # change font color of cell labels to black
+  #, density.info = "none" # turns off density plot inside color legend
+  #, trace = "none" # turns off trace lines inside the heat map
+  #, margins = c(12, 9) # widens margins around plot
+  #, col = my_palette # use our color palette defined earlier
+  ##,breaks=col_breaks     # enable color transition at specified limits # <-- this was an optional thing in the article... Ignoring for now
+  #, dendrogram = "none" # the dendogram is the flow chart showing closeness of the rows/columns as measured by hiearchical clustering.  Can be "row", "column", "both" or "none"
+  #, Colv = old_way # turn off column clustering
+  #, Rowv = old_way # turn off row clustering
+  #, key = FALSE # the key is the colour
+  ##,lmat=rbind(4:3,2:1)   # the layout of the dendograms (2 & 3), key (4) and actual heatmap (1).
+  #, lhei = c(0.95, 4) # the height of the layout parts.  This is the smallest I seem to be able to get the non-heatmap part if there's a title in it
+  #, lwid = c(0.25, 4) # the width of the layout parts.  This is the smallest I seem to be able to get the left matter.
+#)
+#dev.off()
