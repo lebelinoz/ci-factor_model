@@ -16,7 +16,7 @@ o_or_f = "O"
 sql = paste("EXEC PCI_CORE.dbo.rattle_OandFscore_changes ", o_or_f, ", @simple = 1", sep = "'")
 o_scores = get_table_from_sql_CISMPRDSVR(sql)
 #o_scores = subset(o_scores, exchange != "NZ") # exchange != "ASX" && exchange != "NZ")
-o_scores = subset(o_scores, exchange == "ASX")
+o_scores = subset(o_scores, exchange == "NZ")
 ticker_list = unique(o_scores$ticker)
 
 x = get_ticker_xts_return_index(ticker_list, currency, min_date)  # head(x)
@@ -32,6 +32,8 @@ dfRel = flatten_xts(xts_relative, "rel_return", "stock")
 dfRel$date = as.Date(dfRel$date)
 
 # Create a full table of scores, from start date to end:
+all_scores = data.frame(ticker = character(), start = as.Date(character()), end = as.Date(character()), score = character(), stringsAsFactors = FALSE)
+
     #this_ticker = "CYB.ASX"
 for (this_ticker in ticker_list) {
     these_scores = subset(o_scores, ticker == this_ticker)
@@ -40,19 +42,20 @@ for (this_ticker in ticker_list) {
 
     t0 = these_scores[-1,]
     t1 = these_scores[ - nrow(these_scores),]
-    this_df = data.frame(start = t1$change_date, end = t0$change_date, score = t1$new_score)
+    this_df = data.frame(ticker = t0$ticker, start = t1$change_date, end = t0$change_date, score = t1$new_score)
     this_min_date = min(these_scores$change_date)
     this_max_date = max(these_scores$change_date)
     this_start_score = subset(these_scores, change_date == this_min_date)$old_score[1]
     this_end_score = subset(these_scores, change_date == this_max_date)$new_score[1]
-    this_df = rbind(this_df, data.frame(start = min_date, end = this_min_date, score = this_start_score))
-    this_df = rbind(this_df, data.frame(start = this_max_date, end = max_date, score = this_end_score))
+    this_df = rbind(this_df, data.frame(ticker = this_ticker, start = min_date, end = this_min_date, score = this_start_score))
+    this_df = rbind(this_df, data.frame(ticker = this_ticker, start = this_max_date, end = max_date, score = this_end_score))
     this_df = this_df[order(this_df$start),]
 
     this_df$start = as.Date(this_df$start)
     this_df$end = as.Date(this_df$end)
     this_df$score = as.character(this_df$score) # paste("o", this_df$score, sep = "")
     rownames(this_df) = NULL
+    all_scores = rbind(all_scores, this_df)
 
     this_rel = subset(dfRel, stock == this_ticker)
 
