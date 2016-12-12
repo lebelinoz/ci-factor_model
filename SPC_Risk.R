@@ -7,13 +7,13 @@ source('Sql_Wrapper.R')
 spc_ref_table = get_table_from_sql_CISMPRDSVR("SELECT * FROM PCI_REPORTING.dbo.t_spc_ref_portfolio")
 
 # Preamble
-min_date = as.Date('2013-10-31')
-max_date = as.Date('2016-10-31')
+min_date = as.Date('2015-11-29')
+max_date = as.Date('2016-11-30')
 benchmark_name = "XJO" # "MSCIAexJP" # "MSCIWORLD"
 currency = "AUD"
 frequency = "Monthly"
 title_tail = paste("(", currency, ", ", frequency, ")", sep = "")
-spc_id_list = c(117, 123, 140) # 132:139 # 132:139 # 93:98 # c(91, 113, 114) # c(91, 110, 111) #  
+spc_id_list = 123:128 # c(117, 123, 140) # 132:139 # 132:139 # 93:98 # c(91, 113, 114) # c(91, 110, 111) #  
 
 # Label the synthetic portfolios with spc_code:
 spc_id_list = sort(spc_id_list)
@@ -21,11 +21,12 @@ pfolio_names = as.character(spc_ref_table[which(spc_ref_table$spc_id %in% spc_id
 pfolio_names = gsub("ASIAN_WATCHLIST_", "", pfolio_names)
 pfolio_names = gsub("XJO_PMAN_WORST20pc", "PROBM_20pc_red_flags", pfolio_names)
 pfolio_names = gsub("XJO_PMAN_EX_WORST20pc", "Basket_of_safe_stocks_excludes_PROBM_20pc", pfolio_names)
+pfolio_names = gsub("DOM_RL1_", "", pfolio_names)
 
 # Portfolio returns
-pfolio_return = get_spc_xts_raw_total_returns(spc_id_list[1], currency, frequency)
+pfolio_return = get_spc_xts_returns(spc_id_list[1]) # get_spc_xts_raw_total_returns(spc_id_list[1], currency, frequency)
 for (spc_id in spc_id_list[-1]) {
-    pfolio_return = merge(pfolio_return, get_spc_xts_raw_total_returns(spc_id, currency, frequency))
+    pfolio_return = merge(pfolio_return, get_spc_xts_returns(spc_id))
 }
 colnames(pfolio_return) = pfolio_names
 pfolio_return = pfolio_return[which(index(pfolio_return) > min_date & index(pfolio_return) <= max_date),]
@@ -40,9 +41,9 @@ pfolio_price = xts_price_from_returns(pfolio_return, min_date)
 bmark_price = xts_price_from_returns(bmark_return, min_date)
 
 
-probm_price_plot = price_plot(pfolio_price, bmark_price, "ASX 200 and Domestic Stalwarts")
-probm_rel_plot = rel_plot(pfolio_return[, 1:3], bmark_return, paste("ASX 200 and Domestic Stalwarts relative actual ASX 200", title_tail))
-probm_rel_plot2 = rel_plot(pfolio_return[, 1:2], pfolio_return[,3], paste("ASX 200 and Domestic Stalwarts relative spc ASX 200", title_tail))
+#probm_price_plot = price_plot(pfolio_price, bmark_price, "ASX 200 and Domestic Stalwarts")
+#probm_rel_plot = rel_plot(pfolio_return[, 1:3], bmark_return, paste("ASX 200 and Domestic Stalwarts relative actual ASX 200", title_tail))
+#probm_rel_plot2 = rel_plot(pfolio_return[, 1:2], pfolio_return[,3], paste("ASX 200 and Domestic Stalwarts relative spc ASX 200", title_tail))
 
 
 # Price plots
@@ -51,7 +52,8 @@ probm_rel_plot2 = rel_plot(pfolio_return[, 1:2], pfolio_return[,3], paste("ASX 2
 #valueSubset_price_plot = price_plot(pfolio_price[, 3:8], pfolio_price[, 2], paste("Value Subsets * and * Asian Watchlist", title_tail))
 
 ## Rel plots
-#msci_rel_plot = rel_plot(pfolio_return[, 1], bmark_return, paste("MSCI Asia ex Jp computed by CAPS vs Actual MSCI Asia ex Jp", title_tail))
+rel_plot = rel_plot(pfolio_return, bmark_return, paste("Domestic RL1 stocks relative ASX 200", title_tail))
+rel_plot
 #watchlist_rel_plot = rel_plot(pfolio_return[, 2], pfolio_return[, 1], paste("Asian Watchlist vs MSCI Asia ex Jp", title_tail))
 #valueSubset_rel_plot = rel_plot(pfolio_return[, 3:8], pfolio_return[, 2], paste("Value Subsets vs Asian Watchlist", title_tail))
 #valueSubset_rel_plot2 = rel_plot(pfolio_return[, c(3,5,6,8)], pfolio_return[, 2], paste("Value Subsets ex Turnaround & BLE vs Asian Watchlist", title_tail))
@@ -59,9 +61,9 @@ probm_rel_plot2 = rel_plot(pfolio_return[, 1:2], pfolio_return[,3], paste("ASX 2
 
 # Show all plots:
 # dev.set(3)
-probm_price_plot
-probm_rel_plot
-probm_rel_plot2
+#probm_price_plot
+#probm_rel_plot
+#probm_rel_plot2
 
 #msci_price_plot
 #watchlist_price_plot
@@ -82,10 +84,19 @@ probm_rel_plot2
 
 # Some Performance Analytics stuff:
 
-table.SFM(pfolio_return, bmark_return)
-table.SFM(pfolio_return, pfolio_return[,3])
+final_table = table.SFM(pfolio_return, bmark_return)
+colnames(final_table) = pfolio_names
+
+# Add Sharpe ratio, Max drawdown, Jensen's alpha, CalmarRatio
+final_table = rbind(final_table, SharpeRatio(pfolio_return))
+final_table = rbind(final_table, maxDrawdown(pfolio_return))
+final_table = rbind(final_table, CAPM.jensenAlpha(pfolio_return, bmark_return))
+final_table = rbind(final_table, CalmarRatio(pfolio_return))
+
+write.csv(final_table, file = "C:\\Temp\\R_outputs_for_DOM_RL1_ValueSubsets_relative_XJO_12m.csv")
+# table.SFM(pfolio_return, pfolio_return[,3])
 #TotalRisk(pfolio_return, bmark_return)
 
-## Output our two returns arrays
-write.zoo(pfolio_return, "C:/Temp/pfolio_return.csv")
-write.zoo(bmark_return, "C:/Temp/bmark_return.csv")
+### Output our two returns arrays
+#write.zoo(pfolio_return, "C:/Temp/pfolio_return.csv")
+#write.zoo(bmark_return, "C:/Temp/bmark_return.csv")
