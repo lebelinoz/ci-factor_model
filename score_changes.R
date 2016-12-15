@@ -11,7 +11,7 @@ currency = "Local"
 #ticker_list = c("AIA.ASX")
 min_date = as.Date("29/05/2015", "%d/%m/%Y")
 date_range_index = paste(format(min_date, "%Y-%m-%d"), "/", sep = "")
-o_or_f = "O"
+o_or_f = "F"
 
 # O score stuff:
 sql = paste("EXEC PCI_CORE.dbo.rattle_OandFscore_changes ", o_or_f, ", @simple = 1", sep = "'")
@@ -103,7 +103,7 @@ for (this_ticker in ticker_list) {
     chart = chart + scale_fill_manual(values = c("1" = "darkgreen", "2" = "green", "3" = "white", "4" = "red", "5" = "darkred"))
     chart = chart + theme(legend.position = "bottom")
     chart = chart + geom_text(aes(x = start, y = 1, label = paste(round(100 * (with_end_price$rel_return.y / with_end_price$rel_return.x - 1), digits = 1), "%", sep = "")), data = this_df, nudge_x = 30)
-    ggsave(filename = paste("M:\\Information Technology\\Quant\\R\\o_scores\\", this_ticker, ".png", sep = ""), chart)
+    ggsave(filename = paste("M:\\Information Technology\\Quant\\R\\", tolower(o_or_f), "_scores\\", this_ticker, ".png", sep = ""), chart)
 }
 
 # add before-and-after returns
@@ -136,4 +136,4 @@ returns_around_change = data.frame(
     bucket = x$bucket
    )
 
-write.csv(returns_around_change, file = "C:\\Temp\\O_score_change_analysis.csv")
+write.csv(returns_around_change, file = paste("C:\\Temp\\", o_or_f, "_score_change_analysis.csv", sep = ""))
