@@ -33,14 +33,28 @@ ggplot(diamonds, aes(carat, price)) + geom_point()
 ggplot(economics, aes(date, unemploy)) + geom_line()
 ggplot(mpg, aes(cty)) + geom_histogram()
 
-# Section 2.4
+# Section 2.4 Aesthetics (colour, shape, size)
 ggplot(mpg, aes(displ, hwy, colour = class)) + geom_point()
 ggplot(mpg, aes(displ, hwy, shape = drv)) + geom_point()
 ggplot(mpg, aes(displ, hwy, size = cyl)) + geom_point()
 
 ggplot(mpg, aes(displ, hwy, colour = class, shape = drv, size = cyl)) + geom_point()
 
-ggplot(mpg, aes(displ, cty, colour=class)) + geom_point()
+ggplot(mpg, aes(displ, cty, colour = class)) + geom_point()
+
+# Section 2.5 Facetting
+ggplot(mpg, aes(displ, hwy)) + geom_point() + facet_wrap( ~ class)
+
+# Exercise 2.5.1.1
+ggplot(mpg, aes(displ, hwy)) + geom_point() + facet_wrap( ~ hwy)
+ggplot(mpg, aes(displ, class)) + geom_point() + facet_wrap( ~ hwy)
+
+# Exercise 2.5.1.2+
+ggplot(mpg, aes(displ, hwy)) + geom_point() + facet_wrap( ~ cyl)
+ggplot(mpg, aes(displ, cty)) + geom_point() + facet_wrap( ~ cyl)
+ggplot(mpg, aes(displ, cty)) + geom_point() + facet_wrap( ~ cyl, nrow = 1)
+ggplot(mpg, aes(displ, cty)) + geom_point() + facet_wrap( ~ cyl, ncol = 1)
+ggplot(mpg, aes(displ, cty)) + geom_point() + facet_wrap( ~ cyl, nrow = 1, scales = "free")
 
 
 # Section 3.4:  annotation
