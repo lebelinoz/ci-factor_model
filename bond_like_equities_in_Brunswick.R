@@ -13,29 +13,24 @@
 # Preamble
 library(xts) # <-- time series class used in our favourite quant packages
 library(quantmod) # <-- for converting daily prices to weekly/monthly returns
-library(RODBC) # <-- to grab SQL data from our database
 library(reshape) # <-- handy tools for reshaping raw data into crosstabs
 library(PerformanceAnalytics) # <-- has a lovely rolling correlation chart
+source('Sql_Wrapper.R')
 fund_code = 'PCBRAE' # <-- the code for our chosen portfolio
 
 # Collect AU bond returns:
-raw_data = read.csv("BOND-AU-Total Return.csv")
-raw_data_frame = data.frame(Date = as.Date(raw_data[, 1], format("%d/%m/%y")), Index = raw_data[, 2])
-bond_au_index = as.xts(raw_data_frame[, 2], order.by = raw_data_frame[, 1])
+#raw_data = get_table_from_sql_CISMPRDSVR("SELECT metric_date, ")
+#raw_data_frame = data.frame(Date = as.Date(raw_data[, 1], format("%d/%m/%y")), Index = raw_data[, 2])
+bond_au_index = get_ticker_xts_return_index('SPBDAGVT.ASX') # as.xts(raw_data_frame[, 2], order.by = raw_data_frame[, 1])
 bond_au_weekly_return = weeklyReturn(bond_au_index, leading = FALSE)
 bond_au_monthly_return = monthlyReturn(bond_au_index, leading = FALSE)
 
 # Collect US bond returns
-raw_data = read.csv("BOND-US-Total Return.csv")
-raw_data_frame = data.frame(Date = as.Date(raw_data[, 1], format("%d/%m/%Y")), Index = raw_data[, 2])
-bond_us_index = as.xts(raw_data_frame[, 2], order.by = raw_data_frame[, 1])
+#raw_data = read.csv("BOND-US-Total Return.csv")
+#raw_data_frame = data.frame(Date = as.Date(raw_data[, 1], format("%d/%m/%Y")), Index = raw_data[, 2])
+bond_us_index = get_ticker_xts_return_index('SPBDUSB0.US') # as.xts(raw_data_frame[, 2], order.by = raw_data_frame[, 1])
 bond_us_weekly_return = weeklyReturn(bond_us_index, leading = FALSE)
 bond_us_monthly_return = monthlyReturn(bond_us_index, leading = FALSE)
-
-
-#####################################
-## SQL SQL SQL SQL SQL SQL SQL SQL ##
-conn <- odbcConnect(dsn = "CISMPRDSVR")
 
 # Portfolio stocks' daily total return indices in AUD.  Only go back to Feb 2012 because that's when AUD Bond prices go back.
 sqlStocks = paste(
@@ -51,15 +46,13 @@ sqlStocks = paste(
     "'", fund_code, "'",
     sep = ""
 )
-raw_stock_data = sqlQuery(conn, sqlStocks)
+raw_stock_data = get_table_from_sql_CISMPRDSVR(sqlStocks) # sqlQuery(conn, sqlStocks)
+raw_stock_data$date = as_date(raw_stock_data$date)
 
 # AUDUSD conversion rate
-sqlFX = "SELECT fx_date AS [Date], 1/fx_value AS [AUDUSD] FROM t_data_fx WHERE fx_code = 'USDAUD'"
-raw_FX = sqlQuery(conn, sqlFX)
-
-odbcClose(conn)
-## SQL SQL SQL SQL SQL SQL SQL SQL ##
-#####################################
+sqlFX = "SELECT fx_date AS [date], 1/fx_value AS [AUDUSD] FROM t_data_fx WHERE fx_code = 'USDAUD'"
+raw_FX = get_table_from_sql_CISMPRDSVR(sqlFX)
+raw_FX$date = as_date(raw_FX$date)
 
 #####################################
 ## RESHAPE RESHAPE RESHAPE RESHAPE ##
