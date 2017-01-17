@@ -1,5 +1,6 @@
 library(xts) # <-- time series class used in our favourite quant packages
 library(zoo) # <-- another useful time series class
+library(tidyverse)
 
 # Convert price series into daily/weekly/monthly returns
 xts_returns = function(frequency, given_xts, min_date, max_date)
@@ -113,4 +114,11 @@ df_to_xts = function(raw_data, date_name = "Date", group_name = "Ticker", metric
     }
     colnames(xts_return_index) = ticker_list
     return(xts_return_index)
+}
+
+
+previous_business_date_if_weekend = function(my_date) {
+    if (weekdays(my_date) == "Sunday") { my_date = as_date(my_date) - 2 }
+    if (weekdays(my_date) == "Saturday") { my_date = as_date(my_date) - 1 }
+    return(as_date(my_date))
 }

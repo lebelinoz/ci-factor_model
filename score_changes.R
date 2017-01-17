@@ -23,8 +23,9 @@ o_scores[which(o_scores$change_amount > 0), "change_direction"] = "downgrade"
 o_scores = subset(o_scores, exchange == "NZ" | exchange == "ASX")
 ticker_list = unique(o_scores$ticker)
 
-x = get_ticker_xts_return_index(ticker_list, currency, min_date)  # head(x)
-stock_return = CalculateReturns(x)[date_range_index] # head(stock_return)
+x = get_ticker_xts_return_index(ticker_list, currency, min_date) # head(x)
+stock_return = xts_returns("daily", x, min_date, Sys.Date())[date_range_index] # head(stock_return)
+# write.zoo(stock_return, "C://Temp//stock_return.csv")
 bmark_return = get_benchmark_xts_returns(bmark_code, currency)[date_range_index] # head(bmark_return)
 max_date = max(index(stock_return))
 o_scores = o_scores[(which(o_scores$change_date != max_date)),]
@@ -32,11 +33,14 @@ o_scores = o_scores[(which(o_scores$change_date != min_date)),]
 
 # Compute a relative return series:
 xts_relative = Return.relative(stock_return, bmark_return) # head(xts_relative)
+write.zoo(xts_relative, "C://Temp//xts_relative.csv")
 
-# All relative charts should start at one, but these get cutoff by Return.relative:
-temp_row_zero = stock_return[format(min_date, "%Y-%m-%d")]
-temp_row_zero = na.fill(temp_row_zero, 1)
-xts_relative = rbind.xts(temp_row_zero, xts_relative) # FIX IT! FIX IT! FIX IT! 
+# All relative charts should start at one.  Annoyingly, these get cutoff by Return.relative.  This fixes:
+temp_row_zero = stock_return[format(min(index(stock_return)), "%Y-%m-%d")]
+index(temp_row_zero) = c(min_date)
+temp_row_zero[min_date,] = rep(1, dim(temp_row_zero)[2]) # na.fill(temp_row_zero, 1)
+# write.zoo(temp_row_zero, "C://Temp//temp_row_zero.csv")
+xts_relative = rbind.xts(temp_row_zero, xts_relative) 
 
 colnames(xts_relative) = colnames(stock_return)
 
@@ -136,4 +140,4 @@ returns_around_change = data.frame(
     bucket = x$bucket
    )
 
-write.csv(returns_around_change, file = paste("C:\\Temp\\", o_or_f, "_score_change_analysis.csv", sep = ""))
+write.csv(returns_around_change, file = paste("C:\\Temp\\", o_or_f, "_score_change_analysis.csv", sep = ""), row.names = FALSE)

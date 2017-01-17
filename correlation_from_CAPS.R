@@ -10,12 +10,12 @@ library(RColorBrewer) # <-- for the customised colour palette which I want to us
 library(gplots) # <-- if you want customised heatmaps, use heatmap.2 from the gplots package.
 
 # Parameters:
-portfolio_code = 'Norway'
+portfolio_code = 'PCGLUF'
 frequency = "Weekly"
 currency = "Local"
 old_way = TRUE # referring to the ordering of the columns/rows.  If true, let hierarchical clustering automatically group by euclidian distance.
-min_date = as.Date("2011-11-30") # as.Date("2015-09-29") # 
-max_date = as.Date("2016-11-30")
+min_date = as.Date("2012-01-13") # as.Date("2015-09-29") # 
+max_date = as.Date("2017-01-13")
 
 
 ### STEP 1: GET A LIST OF sec_id's (this is the part which will change every time)
@@ -23,10 +23,8 @@ sql_sec_id = paste("select pos.sec_id from t_Ref_Positions_L pos inner join t_Re
                    portfolio_code,
                    "' and pos.sec_id is not null",
                    sep = "")
-sql_sec_id = "SELECT sec_id FROM t_ref_sec WHERE sec_ticker IN ('1299.HK','HSCEI.HK', 'HKHS.HK', 'PRU.GB', 'MFC.US', 'CS.FR', 'AV.GB', 'MET.US', '2318.HK', '2628.HK', '2328.HK', '8750.JP', 'SPBDUSB0.US' )"
-sql_sec_id = "SELECT * FROM dbo.t_Ref_Sec WHERE sec_sedol IN('B1VQF42', '7123870', '5002465', 'B24CGK7', '1871818', '7133608', '4263304', '4732495', '7751259', 'B11HK39', 'BXDZ9Q1', '4824778') OR FactSet_identifier IN('OILB-FDS', 'OSEAX-OSL')"
 secIdList <- get_table_from_sql_CISMPRDSVR(sql_sec_id)$sec_id
-#secIdList <- c(secIdList, 1234567)  # For fun, let's add the secId of the stock we're thinking of buying
+secIdList <- c(secIdList, 123456) # For fun, let's add the secId of the stock we're thinking of buying
 
 
 ### STEP 2: GET RETURN DATA FROM THE DATABASE AT THE DESIRED FREQUENCY
