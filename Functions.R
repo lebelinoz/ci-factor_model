@@ -1,5 +1,6 @@
 library(xts) # <-- time series class used in our favourite quant packages
-library(zoo) # <-- another useful time series class
+library(zoo) # <-- another useful time series class\
+library(quantmod)
 library(tidyverse)
 
 # Convert price series into daily/weekly/monthly returns
