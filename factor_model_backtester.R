@@ -47,7 +47,7 @@ CAPM_Backtester = function(benchmark_code, frequency, currency, min_date, max_da
     all_stock_returns_df = all_stock_returns_df[1:(length(all_stock_returns_df[, 1]) - 1),]
 
     # Convert to xts
-    all_stock_returns = xts(all_stock_returns_df[, -1], all_stock_returns_df[, 1])
+    all_stock_returns = xts(all_stock_returns_df[, -1], as_date(all_stock_returns_df[, 1]))
 
     # Keep only returns between max_date and min_date
     stock_returns = all_stock_returns[paste(min_date, max_date, sep = "/")]
@@ -58,21 +58,23 @@ CAPM_Backtester = function(benchmark_code, frequency, currency, min_date, max_da
     ###########################
     ###  BENCHMARK RETURNS  ###
     all_bmark_returns = get_benchmark_xts_returns(benchark_code, currency, frequency)
-    bmark_returns = all_bmark_returns[paste(min_date, max_date, sep = "/")]
-    ###  BENCHMARK RETURNS  ###
+    bmark_returns = all_bmark_returns[paste(min(index(stock_returns)), max(index(stock_returns)), sep = "/")]
+     ###  BENCHMARK RETURNS ###
     ###########################
 
-    # TODO:  Ensure the dates coincide perfectly between the two 
-
+    ##########################
+    ###  OUTPUT lm RESULTS ###
     test_result = data.frame(
         ticker = character(),
         frequency = character(),
         min_date = as_date(character()),
         max_date = as_date(character()),
+        count = numeric(),
         test_date = as_date(character()),
         beta = numeric(),
         alpha = numeric(),
         r_squared = numeric(),
+        benchmark_next_return = numeric(),
         estimated_next_return = numeric(),
         actual_next_return = numeric(),
         return_error = numeric()
@@ -99,10 +101,12 @@ CAPM_Backtester = function(benchmark_code, frequency, currency, min_date, max_da
             frequency = frequency,
             min_date = min_date,
             max_date = max_date,
+            count = nobs(asset.lm),
             test_date = test_date,
             beta = asset.beta,
             alpha = asset.alpha,
             r_squared = asset.r.squared,
+            benchmark_next_return = next_bmark_move,
             estimated_next_return = estimated_next_asset_move,
             actual_next_return = actual_next_asset_move,
             return_error = estimated_next_asset_move - actual_next_asset_move
@@ -120,7 +124,23 @@ frequency = "Monthly"
 currency = "AUD"
 number_of_months = 60
 max_date = as_date("2016-11-30")
-min_date = EOMonth(max_date, - number_of_months, TRUE) # as_date("2011-11-28") # as.Date("2011-12-30") # as.Date("2015-09-29") # 
-test_date = EOMonth(max_date, 1, TRUE)
 
+# Step 1:  Create a test result data frame
+min_date = EOMonth(max_date, - number_of_months, TRUE) 
+test_date = EOMonth(max_date, 1, TRUE)
 test_result = CAPM_Backtester(benchmark_code, frequency, currency, min_date, max_date, test_date)
+
+# Steps 2 to 13:  Repeat with a different max_date value several times.  Let's see which years were good at predicting final months
+for (i in 2:13) {
+    cat("i = ", i, "\n")
+    max_date = EOMonth(max_date, -12)
+    min_date = EOMonth(max_date, - number_of_months, TRUE)
+    test_date = EOMonth(max_date, 1, TRUE)
+    this_test_result = CAPM_Backtester(benchmark_code, frequency, currency, min_date, max_date, test_date)
+    test_result = rbind(this_test_result, test_result)
+}
+
+
+write.csv(test_result, paste("C://Temp//factor_model_backtests_", benchark_code, "_", frequency, "_", number_of_months, "m.csv", sep = ""), row.names = FALSE)
+
+
