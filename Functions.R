@@ -123,3 +123,16 @@ previous_business_date_if_weekend = function(my_date) {
     if (weekdays(my_date) == "Saturday") { my_date = as_date(my_date) - 1 }
     return(as_date(my_date))
 }
+
+EOMonth = function(d, step, last_business_date = FALSE) {
+    day(d) = 1
+    month(d) = month(d) + step
+    day(d) = days_in_month(d)
+    if (last_business_date) {
+        return(previous_business_date_if_weekend(d))
+    } else {
+        return(d)
+    }
+}
+
+
