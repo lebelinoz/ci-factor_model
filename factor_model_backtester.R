@@ -41,7 +41,7 @@ CAPM_Backtester = function(benchmark_code, frequency, currency, min_date, max_da
 
     # Drop all columns where there is only data for less than 50% of the data 
     # (eg. for 52-week correlations, stocks which IPO'd six months ago will look off-the-charts)
-    all_stock_returns_df = all_stock_returns_df[, colSums(is.na(all_stock_returns_df)) < length(all_stock_returns_df[, 1]) / 2]
+    #all_stock_returns_df = all_stock_returns_df[, colSums(is.na(all_stock_returns_df)) < length(all_stock_returns_df[, 1]) / 2]
 
     # Drop T-1 row (remember that SQL's get_performance_chart always tacks on a T-1 data point which may not reflect a full period)
     all_stock_returns_df = all_stock_returns_df[1:(length(all_stock_returns_df[, 1]) - 1),]
@@ -131,9 +131,9 @@ test_date = EOMonth(max_date, 1, TRUE)
 test_result = CAPM_Backtester(benchmark_code, frequency, currency, min_date, max_date, test_date)
 
 # Steps 2 to 13:  Repeat with a different max_date value several times.  Let's see which years were good at predicting final months
-for (i in 2:13) {
+for (i in 2:156) {
     cat("i = ", i, "\n")
-    max_date = EOMonth(max_date, -12)
+    max_date = EOMonth(max_date, -1)
     min_date = EOMonth(max_date, - number_of_months, TRUE)
     test_date = EOMonth(max_date, 1, TRUE)
     this_test_result = CAPM_Backtester(benchmark_code, frequency, currency, min_date, max_date, test_date)
@@ -142,5 +142,3 @@ for (i in 2:13) {
 
 
 write.csv(test_result, paste("C://Temp//factor_model_backtests_", benchark_code, "_", frequency, "_", number_of_months, "m.csv", sep = ""), row.names = FALSE)
-
-
