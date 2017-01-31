@@ -1,6 +1,6 @@
 ### PREAMBLE
-source('Sql_Wrapper.R') # <-- for grabbing data straight from our SQL database
-source('StockPlot.R') # <-- for plotting relative return charts
+source('./lib/Sql_Wrapper.R') # <-- for grabbing data straight from our SQL database
+source('./lib/StockPlot.R') # <-- for plotting relative return charts
 
 Factor_Model_Backtester = function(benchmark_code, frequency, currency, min_date, max_date, test_date, all_factor_returns_xts, sec_id_override = 0) {
 

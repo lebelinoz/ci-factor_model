@@ -5,8 +5,8 @@
 ###################################
 
 ### PREAMBLE
-source('Sql_Wrapper.R') # <-- for grabbing data straight from our SQL database
-source('StockPlot.R')   # <-- for plotting relative return charts
+source('./lib/Sql_Wrapper.R') # <-- for grabbing data straight from our SQL database
+source('./lib/StockPlot.R')   # <-- for plotting relative return charts
 
 # Parameters:
 benchmark_code = 'XJO'

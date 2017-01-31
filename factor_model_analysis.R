@@ -1,5 +1,5 @@
 ### PREAMBLE
-source('Sql_Wrapper.R') # <-- for grabbing data straight from our SQL database
+source('./lib/Sql_Wrapper.R') # <-- for grabbing data straight from our SQL database
 library(tidyverse)
 
 ################

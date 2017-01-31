@@ -1,6 +1,6 @@
 library(RODBC) # <-- to grab SQL data from our database
 library(lubridate) # <-- because R gets confused with dates, treating some as POSIXct and others not, and can't compare them.
-source('Functions.R')
+source('./lib/Functions.R')
 
 get_table_from_sql_CISMPRDSVR = function(sql) {
     conn <- odbcConnect(dsn = "CISMPRDSVR")

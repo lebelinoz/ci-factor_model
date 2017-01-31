@@ -1,6 +1,6 @@
 library(ggplot2)
 library(PerformanceAnalytics) # <-- has a potentially useful Return.relative function
-source('Functions.R') # <-- put all your functions in one place
+source('./lib/Functions.R') # <-- put all your functions in one place
 
 # Plot the prices:
 price_plot = function(xts_pfolio_price, xts_bmark_price, chart_title) {
