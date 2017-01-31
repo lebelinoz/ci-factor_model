@@ -83,106 +83,100 @@ bmark_returns = all_bmark_returns[paste(min_date, max_date, sep = "/")]
 
 ###########################
 ###  FACTOR RETURNS     ###
-
-## TO DO:  Get the bond index returns for factor_sec_id.
-#factor_ticker = 'SPBDAGVT.ASX' # S&P/ASX Government Bond index ticker is SPBDAGVT.ASX  ...For the U.S. Treasury Bond index, use SPBDUSB0.US
-#ticker_list = c(factor_ticker)
-#factor_index = get_ticker_xts_return_index(ticker_list, currency)
-#all_factor_returns = periodReturn(factor_index, tolower(frequency))
-#factor_returns = all_factor_returns[paste(min_date, max_date, sep = "/")]
-
 # Change of plans:  let's use the Citigroup bond index because it has more history, and it has a corresponding yield which we may find useful.
 # I've exported the Aussie one (ticker SBABIG) into a csv file:
 
 # How to format upon importing according to http://stackoverflow.com/questions/13022299/specify-custom-date-format-for-colclasses-argument-in-read-table-read-csv
 setClass('myDate')
-setAs("character", "myDate", function(from) as.Date(from, format = "%m/%d/%y"))
-bond_index = read.csv("C://Temp//SBABIG.csv", colClasses = c('myDate', 'numeric', 'numeric'))
-all_factor_returns = periodReturn(xts(bond_index[, 2], order.by = bond_index[, 1]), period = tolower(frequency))
-factor_returns = all_factor_returns[paste(min_date, max_date, sep = "/")]
+setAs("character", "myDate", function(from) as.Date(from, format = "%m/%d/%Y"))
+# bond_index = read.csv("C://Temp//SBABIG.csv", colClasses = c('myDate', 'numeric', 'numeric'))  # The Citigroup index
+bond_index = read.csv("C://Temp//TRYAU10Y.csv", colClasses = c('myDate', 'numeric', 'numeric'))  # Some 10Y Australian Bond Index I found in FactSet.
 
+
+# Let bond index returns be the factor:
+bond_index_no_na = filter(bond_index, !is.na(bond_index[, 2]))
+all_bond_returns = periodReturn(xts(bond_index_no_na[, 2], order.by = bond_index_no_na[, 1]), period = tolower(frequency))
+
+# Let bond yield log-returns be the factor:
+all_yield10y_returns = periodReturn(xts(bond_index[, 3], order.by = bond_index[, 1]), period = tolower(frequency), type = "log")
+
+all_yield10y_returns_df = data.frame(date = index(all_yield10y_returns_df), yr = all_yield10y_returns_df[, 1])
+colnames(all_yield10y_returns_df) = c("date", "yr")
+ggplot(all_yield10y_returns_df, aes(date, yr)) + geom_point()
+
+# Actually, the link to the logreturn of the yields don't feel quite right...  (Turns out there are a couple of weird outliers....)
+
+bond_returns = all_bond_returns[paste(min_date, max_date, sep = "/")]
+yield10y_returns = all_yield10y_returns[paste(min_date, max_date, sep = "/")]
+
+all_yield90d_df = read.csv("C://Temp//REFAU90DBA.csv", colClasses = c('myDate', 'numeric'))
+all_yield90d_returns = periodReturn(xts(all_yield90d_df[, 2], order.by = all_yield90d_df[, 1]), period = tolower(frequency), type = "log")
 ###  FACTOR RETURNS     ###
 ###########################
 
 
 ###########################
-### FACTOR MODEL STEP 1 ###
+### FACTOR MODEL        ###
 
-# TO DO:  Regression to compute beta and the error term (which will be alpha)
+#test_result = data.frame(
+    #ticker = character(), 
+    #frequency = character(), 
+    #min_date = as_date(character()), 
+    #max_date = as_date(character()),
+    #test_date = as_date(character()),
+    #beta = numeric(), 
+    #alpha = numeric(), 
+    #r_squared = numeric(), 
+    #estimated_next_return = numeric(), 
+    #actual_next_return = numeric(),
+    #return_error = numeric()
+#)
 
-### FACTOR MODEL STEP 1 ###
-###########################
+ticker = "WBC"
+
+#for (ticker in colnames(stock_returns)) {
+asset_returns = stock_returns[, ticker]
+asset_and_bmark_and_factors = data.frame(index(asset_returns), asset_returns[, 1], bmark_returns[, 1], bond_returns[, 1], yield10_returns[, 1], row.names = NULL)
 
 
-###########################
-### FACTOR MODEL STEP 2 ###
+colnames(asset_and_bmark_and_factors) = c("date", "asset", "bmark", "bond_return", "yield_return")
 
-# TO DO:  Regression to compute second beta and the leftover error term, thus building a 2-factor model
+asset_benchmark_factors.lm = lm(asset ~ bmark + bond_return + yield_return, data = asset_and_bmark_and_factors)
+summary(asset_benchmark_factors.lm)
+#anova(asset_benchmark_factors.lm)
 
-### FACTOR MODEL STEP 2 ###
-###########################
+asset_benchmark.lm = lm(asset ~ bmark, data = asset_and_bmark_and_factors)
+summary(asset_benchmark.lm)
+#anova(asset_benchmark.lm)
 
+asset_bmark_and_yield.lm = lm(asset ~ bmark + yield_return, data = asset_and_bmark_and_factors)
+summary(asset_bmark_and_yield.lm)
+#anova(asset_bmark_and_yield.lm)
 
-###########################
-###   CALCULATE RISKS   ###
+asset_yield.lm = lm(asset ~ yield_return, data = asset_and_bmark_and_factors)
+summary(asset_yield.lm)
 
-# TO DO:  Compute risk metrics.  Calculate the shock of the bond index to the portfolio.
+# Let's look at the interaction between the benchmark, bond prices and yield.
+bmark_yield.lm = lm(bmark ~ yield_return, data = asset_and_bmark_and_factors)
+summary(bmark_yield.lm)
 
-###   CALCULATE RISKS   ###
-###########################
+bmark_bond.lm = lm(bmark ~ bond_return, data = asset_and_bmark_and_factors)
+summary(bmark_bond.lm)
 
-test_result = data.frame(
-    ticker = character(), 
-    frequency = character(), 
-    min_date = as_date(character()), 
-    max_date = as_date(character()),
-    test_date = as_date(character()),
-    beta = numeric(), 
-    alpha = numeric(), 
-    r_squared = numeric(), 
-    estimated_next_return = numeric(), 
-    actual_next_return = numeric(),
-    return_error = numeric()
-)
+bond_yield.lm = lm(bond_return ~ yield_return, data = asset_and_bmark_and_factors)
+summary(bond_yield.lm)
 
-for (ticker in colnames(stock_returns)) {
-    asset_returns = stock_returns[, ticker]
-    asset_and_bmark = data.frame(index(asset_returns), asset_returns[, 1], bmark_returns[, 1], row.names = NULL)
-    colnames(asset_and_bmark) = c("date", "asset", "bmark")
-    asset.lm = lm(asset ~ bmark, data = asset_and_bmark)
-    asset.beta = asset.lm$coefficients[2]
-    asset.alpha = asset.lm$coefficients[1]
-    asset.r.squared = summary(asset.lm)$r.squared
+ggplot(asset_and_bmark_and_factors, aes(bond_return, yield_return)) + geom_point() + geom_smooth(method = "lm")
 
-    #x = ggplot(asset_and_bmark, aes(x = bmark, y = asset)) 
-    #x = x + geom_point()
-    #x = x + geom_abline(intercept = asset.alpha, slope = asset.beta)
-    #x + ggtitle(paste(ticker, "R-squared =", format(asset.r.squared, digits = 2)))
+x = filter(asset_and_bmark_and_factors, bond_return != max(bond_return), bond_return != min(bond_return))
+x = filter(x, bond_return != max(bond_return))
 
-    next_bmark_move = as.numeric(all_bmark_returns[test_date, 1])
-    estimated_next_asset_move = asset.beta * next_bmark_move + asset.alpha
-    actual_next_asset_move = as.numeric(all_stock_returns[test_date, ticker])
+ggplot(x, aes(bond_return, yield_return)) + geom_point() + geom_smooth(method = "lm")
 
-    df = data.frame(
-        ticker = ticker,
-        frequency = frequency,
-        min_date = min_date,
-        max_date = max_date,
-        test_date = test_date,
-        beta = asset.beta, 
-        alpha = asset.alpha, 
-        r_squared = asset.r.squared, 
-        estimated_next_return = estimated_next_asset_move, 
-        actual_next_return = actual_next_asset_move,
-        return_error = estimated_next_asset_move - actual_next_asset_move
-    )
-    test_result = rbind(test_result, df)
-}
+summary(bond_yield.lm)
+summary(lm(bond_return ~ yield_return, data = x))
 
-rownames(test_result) = NULL
-
-test_result2 = CAPM_Backtester("XJO", "Monthly", "AUD", as_date("2011-11-28"), as_date("2016-11-30"), as_date("2016-12-30"))
-
-#write.zoo(asset1_returns, " C: / / Temp / / asset1_returns.csv ")
-#write.zoo(bmark_returns, "C://Temp//bmark_returns.csv")
-#write.zoo(factor_returns, "C://Temp//factor_returns.csv")
+ggplot(asset_and_bmark_and_factors, aes(bmark, yield_return)) + geom_point() + geom_smooth(method = "lm")
+ggplot(asset_and_bmark_and_factors, aes(bmark, bond_return)) + geom_point() + geom_smooth(method = "lm")
+ggplot(asset_and_bmark_and_factors, aes(asset, bmark)) + geom_point() + geom_smooth(method = "lm")
+ggplot(asset_and_bmark_and_factors, aes(asset, yield_return)) + geom_point() + geom_smooth(method = "lm")

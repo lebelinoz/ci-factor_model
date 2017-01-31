@@ -8,7 +8,7 @@ Factor_Model_Backtester = function(benchmark_code, frequency, currency, min_date
     ###   EQUITY RETURNS    ###
     # Get the universe of sec_id's.  This will be constituents AT THE TIME (unless we only want to focus on a single stock)
     if (sec_id_override == 0) {
-        sql_sec_id = paste("EXEC PCI_CORE.dbo.get_index_constituents @index_code  = '", benchark_code, "', @at_date = '", format(max_date, "%Y-%m-%d"), "'", sep = "")
+        sql_sec_id = paste("EXEC PCI_CORE.dbo.get_index_constituents @index_code  = '", benchmark_code, "', @at_date = '", format(max_date, "%Y-%m-%d"), "'", sep = "")
         secIdList <- get_table_from_sql_CISMPRDSVR(sql_sec_id)$sec_id
     } else {
         secIdList = c(sec_id_override)
@@ -161,4 +161,4 @@ for (i in 2:132) {
 }
 
 
-write.csv(test_result, paste("C://Temp//factor_model_backtests_", benchark_code, "_", frequency, "_", number_of_months, "m_factor_is_brazilian_cattle_price.csv", sep = ""), row.names = FALSE)
+write.csv(test_result, paste("C://Temp//factor_model_backtests_", benchmark_code, "_", frequency, "_", number_of_months, "m_factor_is_brazilian_cattle_price.csv", sep = ""), row.names = FALSE)
