@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "ci-spc", "ci-spc.rxproj", "{1F11D776-9F23-479C-A45B-246659D39726}"
+Project("{DA7A21FA-8162-4350-AD77-A8D1B671F3ED}") = "ci-factor_model", "ci-factor_model.rxproj", "{1F11D776-9F23-479C-A45B-246659D39726}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

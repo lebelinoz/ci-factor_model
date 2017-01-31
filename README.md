@@ -1,6 +1,2 @@
-# ci-spc
-Synthetic Portfolio Construction
-
-Some basic tools for creating and analysing synthetic portfolio 
-
-Testing GitHub + various IDE by using Git from different machines
+# ci-factor_model
+Working on a factor model for testing ci portfolio sensitivies.
