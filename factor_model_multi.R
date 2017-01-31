@@ -100,9 +100,9 @@ all_bond_returns = periodReturn(xts(bond_index_no_na[, 2], order.by = bond_index
 # Let bond yield log-returns be the factor:
 all_yield10y_returns = periodReturn(xts(bond_index[, 3], order.by = bond_index[, 1]), period = tolower(frequency), type = "log")
 
-all_yield10y_returns_df = data.frame(date = index(all_yield10y_returns_df), yr = all_yield10y_returns_df[, 1])
+all_yield10y_returns_df = data.frame(date = index(all_yield10y_returns), yr = all_yield10y_returns[, 1])
 colnames(all_yield10y_returns_df) = c("date", "yr")
-ggplot(all_yield10y_returns_df, aes(date, yr)) + geom_point()
+# ggplot(all_yield10y_returns_df, aes(date, yr)) + geom_point() + ggtitle("Time series of 10y yield log returns") + scale_y_log10()
 
 # Actually, the link to the logreturn of the yields don't feel quite right...  (Turns out there are a couple of weird outliers....)
 
@@ -132,29 +132,40 @@ all_yield90d_returns = periodReturn(xts(all_yield90d_df[, 2], order.by = all_yie
     #return_error = numeric()
 #)
 
+#for (ticker in colnames(stock_returns)) {
 ticker = "WBC"
 
-#for (ticker in colnames(stock_returns)) {
 asset_returns = stock_returns[, ticker]
-asset_and_bmark_and_factors = data.frame(index(asset_returns), asset_returns[, 1], bmark_returns[, 1], bond_returns[, 1], yield10_returns[, 1], row.names = NULL)
-
-
+asset_and_bmark_and_factors = data.frame(index(asset_returns), asset_returns[, 1], bmark_returns[, 1], bond_returns[, 1], yield10y_returns[, 1], row.names = NULL)
 colnames(asset_and_bmark_and_factors) = c("date", "asset", "bmark", "bond_return", "yield_return")
 
-asset_benchmark_factors.lm = lm(asset ~ bmark + bond_return + yield_return, data = asset_and_bmark_and_factors)
-summary(asset_benchmark_factors.lm)
-#anova(asset_benchmark_factors.lm)
-
+# Single linear regression of asset vs benchmark, bond index 
 asset_benchmark.lm = lm(asset ~ bmark, data = asset_and_bmark_and_factors)
 summary(asset_benchmark.lm)
-#anova(asset_benchmark.lm)
-
-asset_bmark_and_yield.lm = lm(asset ~ bmark + yield_return, data = asset_and_bmark_and_factors)
-summary(asset_bmark_and_yield.lm)
-#anova(asset_bmark_and_yield.lm)
+anova(asset_benchmark.lm)
 
 asset_yield.lm = lm(asset ~ yield_return, data = asset_and_bmark_and_factors)
 summary(asset_yield.lm)
+anova(asset_yield.lm)
+
+asset_bond.lm = lm(asset ~ bond_return, data = asset_and_bmark_and_factors)
+summary(asset_bond.lm)
+anova(asset_bond.lm)
+
+# Multilinear regression on benchmark, bond returns and yield log returns.
+# Instinctively, using both the bond index and the yield together adds nothing beyond just adding one of them.  The results confirm it when compared to  
+asset_benchmark_factors.lm = lm(asset ~ bmark + bond_return + yield_return, data = asset_and_bmark_and_factors)
+summary(asset_benchmark_factors.lm)
+anova(asset_benchmark_factors.lm)
+
+asset_bmark_and_bond.lm = lm(asset ~ bmark + bond_return, data = asset_and_bmark_and_factors)
+summary(asset_bmark_and_bond.lm)
+anova(asset_bmark_and_bond.lm)
+
+asset_bmark_and_yield.lm = lm(asset ~ bmark + yield_return, data = asset_and_bmark_and_factors)
+summary(asset_bmark_and_yield.lm)
+anova(asset_bmark_and_yield.lm)
+
 
 # Let's look at the interaction between the benchmark, bond prices and yield.
 bmark_yield.lm = lm(bmark ~ yield_return, data = asset_and_bmark_and_factors)
