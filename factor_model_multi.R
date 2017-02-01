@@ -166,18 +166,19 @@ anova(bmark_yield.lm)
 bmark_bond.lm = lm(bmark ~ bond, data = asset_and_bmark_and_factors)
 summary(bmark_bond.lm)
 
-bond_yield.lm = lm(bond_return ~ yield_return, data = asset_and_bmark_and_factors)
+bond_yield.lm = lm(bond ~ yield, data = asset_and_bmark_and_factors)
 summary(bond_yield.lm)
 
 ggplot(asset_and_bmark_and_factors, aes(bond_return, yield_return)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Bond vs Yield")
 
-x = filter(asset_and_bmark_and_factors, bond_return != max(bond_return), bond_return != min(bond_return))
-x = filter(x, bond_return != max(bond_return))
+x = filter(asset_and_bmark_and_factors, bond != max(bond), bond != min(bond))
+x = filter(x, bond != max(bond))
 
-ggplot(x, aes(bond_return, yield_return)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Bond vs Yield (after dropping a couple of funny outliers)")
+ggplot(x, aes(bond, yield)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Bond vs Yield (after dropping a couple of funny outliers)")
 
 summary(bond_yield.lm)
-summary(lm(bond_return ~ yield_return, data = x))
+summary(lm(bond ~ yield, data = x))
+anova(lm(bond ~ yield, data = x))
 
 ggplot(asset_and_bmark_and_factors, aes(bmark, yield)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Benchmark vs Yield")
 ggplot(asset_and_bmark_and_factors, aes(bmark, bond)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Benchmark vs Bond")
