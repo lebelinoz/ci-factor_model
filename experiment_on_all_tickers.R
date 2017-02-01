@@ -119,67 +119,51 @@ all_yield90d_returns = periodReturn(xts(all_yield90d_df[, 2], order.by = all_yie
 ###########################
 ### FACTOR MODEL        ###
 
+df = data.frame(
+        ticker = character(),
+        universe = character(),
+        bmark = logical(),
+        bond = logical(),
+        yield = logical(),
+        r.squared = numeric(),
+        adj.r.squared = numeric(),
+        F_value = numeric(),
+        p_value = numeric(),
+        intercept = numeric(),
+        bmark_beta = numeric(),
+        bond_beta = numeric(),
+        yield_beta = numeric(),
+        residual_error = numeric(),
+        bmark_F_value = numeric(),
+        bond_F_value = numeric(),
+        yield_F_value = numeric(),
+        bmark_p_value = numeric(),
+        bond_p_value = numeric(),
+        yield_p_value = numeric()
+    )
+
 #for (ticker in colnames(stock_returns)) {
-ticker = "WBC"
+    ticker = "ANZ"
+    asset_returns = stock_returns[, ticker]
+    asset_and_bmark_and_factors = data.frame(index(asset_returns), asset_returns[, 1], bmark_returns[, 1], bond_returns[, 1], yield10y_returns[, 1], row.names = NULL)
+    colnames(asset_and_bmark_and_factors) = c("date", "asset", "bmark", "bond", "yield")
+    df = rbind(df, single_experiment_summary(ticker, benchmark_code, include_bmark = TRUE, lm_object = lm(asset ~ bmark, data = asset_and_bmark_and_factors)))
+    df = rbind(df, single_experiment_summary(ticker, benchmark_code, include_bond = TRUE, lm_object = lm(asset ~ bond, data = asset_and_bmark_and_factors)))
+    df = rbind(df, single_experiment_summary(ticker, benchmark_code, include_yield = TRUE, lm_object = lm(asset ~ yield, data = asset_and_bmark_and_factors)))
+    df = rbind(df, single_experiment_summary(ticker, benchmark_code, include_bmark = TRUE, include_bond = TRUE, lm_object = lm(asset ~ bmark + bond, data = asset_and_bmark_and_factors)))
+    df = rbind(df, single_experiment_summary(ticker, benchmark_code, include_bmark = TRUE, include_yield = TRUE, lm_object = lm(asset ~ bmark + yield, data = asset_and_bmark_and_factors)))
+    df = rbind(df, single_experiment_summary(ticker, benchmark_code, include_bond = TRUE, include_yield = TRUE, lm_object = lm(asset ~ bond + yield, data = asset_and_bmark_and_factors)))
+    df = rbind(df, single_experiment_summary(ticker, benchmark_code, include_bmark = TRUE, include_bond = TRUE, include_yield = TRUE, lm_object = lm(asset ~ bmark + bond + yield, data = asset_and_bmark_and_factors)))
+    cat("ticker =", ticker, "\n")
+#}
 
-asset_returns = stock_returns[, ticker]
-asset_and_bmark_and_factors = data.frame(index(asset_returns), asset_returns[, 1], bmark_returns[, 1], bond_returns[, 1], yield10y_returns[, 1], row.names = NULL)
-colnames(asset_and_bmark_and_factors) = c("date", "asset", "bmark", "bond", "yield")
+raw_ANZ = asset_and_bmark_and_factors
 
-# Single linear regression of asset vs benchmark, bond index 
-asset_benchmark.lm = lm(asset ~ bmark, data = asset_and_bmark_and_factors)
-summary(asset_benchmark.lm)
-anova(asset_benchmark.lm)
-
-asset_yield.lm = lm(asset ~ yield_return, data = asset_and_bmark_and_factors)
-summary(asset_yield.lm)
-anova(asset_yield.lm)
-
-asset_bond.lm = lm(asset ~ bond_return, data = asset_and_bmark_and_factors)
-summary(asset_bond.lm)
-anova(asset_bond.lm)
-
-# Multilinear regression on benchmark, bond returns and yield log returns.
-# Instinctively, using both the bond index and the yield together adds nothing beyond just adding one of them.  The results confirm it when compared to  
-asset_benchmark_factors.lm = lm(asset ~ bmark + bond_return + yield_return, data = asset_and_bmark_and_factors)
-summary(asset_benchmark_factors.lm)
-anova(asset_benchmark_factors.lm)
-
-asset_bmark_and_bond.lm = lm(asset ~ bmark + bond, data = asset_and_bmark_and_factors)
-summary(asset_bmark_and_bond.lm)
-anova(asset_bmark_and_bond.lm)
-
-asset_bmark_and_yield.lm = lm(asset ~ bmark + yield_return, data = asset_and_bmark_and_factors)
-summary(asset_bmark_and_yield.lm)
-anova(asset_bmark_and_yield.lm)
-
-asset_bond_and_yield.lm = lm(asset ~ bond_return + yield_return, data = asset_and_bmark_and_factors)
-summary(asset_bond_and_yield.lm)
-anova(asset_bond_and_yield.lm)
+flat_ANZ = data.frame(date = raw_ANZ$date, asset = raw_ANZ$asset, factor = raw_ANZ$bmark, factor_name = rep("bmark", dim(raw_ANZ)[1]))
+flat_ANZ = rbind(flat_ANZ, data.frame(date = raw_ANZ$date, asset = raw_ANZ$asset, factor = raw_ANZ$bond, factor_name = rep("bond", dim(raw_ANZ)[1])))
+flat_ANZ = rbind(flat_ANZ, data.frame(date = raw_ANZ$date, asset = raw_ANZ$asset, factor = raw_ANZ$yield, factor_name = rep("yield", dim(raw_ANZ)[1])))
 
 
-# Let's look at the interaction between the benchmark, bond prices and yield.
-bmark_yield.lm = lm(bmark ~ yield, data = asset_and_bmark_and_factors)
-summary(bmark_yield.lm)
-anova(bmark_yield.lm)
+x = ggplot(flat_ANZ, aes(asset, factor)) + geom_point()
 
-bmark_bond.lm = lm(bmark ~ bond, data = asset_and_bmark_and_factors)
-summary(bmark_bond.lm)
-
-bond_yield.lm = lm(bond_return ~ yield_return, data = asset_and_bmark_and_factors)
-summary(bond_yield.lm)
-
-ggplot(asset_and_bmark_and_factors, aes(bond_return, yield_return)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Bond vs Yield")
-
-x = filter(asset_and_bmark_and_factors, bond_return != max(bond_return), bond_return != min(bond_return))
-x = filter(x, bond_return != max(bond_return))
-
-ggplot(x, aes(bond_return, yield_return)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Bond vs Yield (after dropping a couple of funny outliers)")
-
-summary(bond_yield.lm)
-summary(lm(bond_return ~ yield_return, data = x))
-
-ggplot(asset_and_bmark_and_factors, aes(bmark, yield)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Benchmark vs Yield")
-ggplot(asset_and_bmark_and_factors, aes(bmark, bond)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Benchmark vs Bond")
-ggplot(asset_and_bmark_and_factors, aes(asset, bmark)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Asset vs Benchmark")
-ggplot(asset_and_bmark_and_factors, aes(asset, yield)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Asset vs Yield")
+ggplot(flat_ANZ, aes(asset, factor)) + geom_ + facet_wrap( ~ factor_name)
