@@ -6,8 +6,8 @@
 # The function 'get_test_date' will be used to get the next day/week/month date after the end date (always a business date).
 ###################################################
 
-require(lubridate)
-source('./lib/Functions.R')
+# require(lubridate)
+# source('./lib/Functions.R')
 
 timeframe <- setClass(
     # Set the name
@@ -22,8 +22,8 @@ timeframe <- setClass(
 
     # Default values are two days ago
     prototype = list(
-        start_date = previous_business_date_if_weekend(as_date(today() - 367)),
-        end_date = previous_business_date_if_weekend(as_date(today() - 1)),
+        start_date = previous_business_date_if_weekend(lubridate::as_date(today() - 367)),
+        end_date = previous_business_date_if_weekend(lubridate::as_date(today() - 1)),
         frequency = "D"
     ),
 
