@@ -155,10 +155,9 @@ df = data.frame(
 #}
 
 
-# Let's chart the returns of the last asset by b'mark, bond index and bond yield returns:
+# Let's chart the returns of the last asset, facetted by b'mark, bond index and bond yield returns:
 raw_ANZ = asset_and_bmark_and_factors
 flat_ANZ = data.frame(date = raw_ANZ$date, asset = raw_ANZ$asset, factor = raw_ANZ$bmark, factor_name = rep("bmark", dim(raw_ANZ)[1]))
 flat_ANZ = rbind(flat_ANZ, data.frame(date = raw_ANZ$date, asset = raw_ANZ$asset, factor = raw_ANZ$bond, factor_name = rep("bond", dim(raw_ANZ)[1])))
 flat_ANZ = rbind(flat_ANZ, data.frame(date = raw_ANZ$date, asset = raw_ANZ$asset, factor = raw_ANZ$yield, factor_name = rep("yield", dim(raw_ANZ)[1])))
-
 ggplot(flat_ANZ, aes(factor, asset)) + geom_point() + facet_wrap( ~ factor_name) + geom_smooth(method = "lm") # + scale_x_continuous(limits = c(-0.075, 0.075))
