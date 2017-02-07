@@ -9,6 +9,7 @@
 require(lubridate)
 source('./lib/Functions.R')
 
+# The base constructor
 timeframe <- setClass(
     # Set the name
     "timeframe",
@@ -20,7 +21,7 @@ timeframe <- setClass(
         frequency = "character"
     ),
 
-    # Default values are two days ago
+    # Default values are yesterday, a year ago yesterday, and daily frequency
     prototype = list(
         start_date = previous_business_date_if_weekend(lubridate::as_date(today() - 367)),
         end_date = previous_business_date_if_weekend(lubridate::as_date(today() - 1)),
@@ -81,6 +82,9 @@ setMethod("get_frequency",  definition = function(obj, long.form = FALSE) {
 
 
 ## Example:
-#t <- timeframe(start_date = as_date("2016-01-02"), end_date = as_date("2016-12-31"), frequency = "W")
-#get_frequency(t)
-#get_frequency(t, long.form = TRUE)
+#(t1 <- new("timeframe", start_date = as_date("2016-01-02"), end_date = as_date("2016-12-31"), frequency = "W"))  # <=== Always works
+#(t2 <- timeframe(yrs = 3))  # <=== I can write an extra constructor so this works, but it hide the base constructor and then the following fails
+#(t3 <- timeframe(start_date = as_date("2016-01-02"), end_date = as_date("2016-12-31"), frequency = "W"))
+
+
+

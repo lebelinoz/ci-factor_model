@@ -1,3 +1,5 @@
+# This is my favourite way of showing a regression of two columns in a data set.
+# The title of the chart will be the two column names and the r-squared of the linear model.
 show_regression = function(data, x_string, y_string) {
     r.squared = summary(lm(data[, x_string] ~ data[, y_string], data))$r.squared
     title_thing = ggtitle(paste(x_string, " vs ", y_string, ", r-squared = ", format(r.squared, digits = 2), sep = ""))
