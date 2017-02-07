@@ -6,8 +6,8 @@
 # The function 'get_test_date' will be used to get the next day/week/month date after the end date (always a business date).
 ###################################################
 
-# require(lubridate)
-# source('./lib/Functions.R')
+require(lubridate)
+source('./lib/Functions.R')
 
 timeframe <- setClass(
     # Set the name
@@ -62,9 +62,25 @@ setMethod(f = "get_test_date", signature = "timeframe", definition = function(ob
     return(previous_business_date_if_weekend(next_date))
 })
 
+setGeneric(name = "get_frequency", def = function(obj, long.form = FALSE) { standardGeneric("get_frequency") })
+setMethod("get_frequency",  definition = function(obj, long.form = FALSE) {
+    if (long.form == FALSE) {
+        return(obj@frequency)
+    } else {
+        if (obj@frequency == "D") {
+            return("daily")
+        }
+        if (obj@frequency == "W") {
+            return("weekly")
+        }
+        if (obj@frequency == "M") {
+            return("monthly")
+        }
+    }
+})
+
 
 ## Example:
-#t <- timeframe(start_date = as_date("2016-01-02"), end_date = as_date("2016-12-31"), frequency = "D")
-#get_start_date(t)
-#get_end_date(t)
-#get_test_date(t)
+#t <- timeframe(start_date = as_date("2016-01-02"), end_date = as_date("2016-12-31"), frequency = "W")
+#get_frequency(t)
+#get_frequency(t, long.form = TRUE)

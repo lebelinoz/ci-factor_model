@@ -11,8 +11,10 @@ source('single_experiment_summary.R')
 
 # Parameters:
 benchmark_code = 'XJO'
-frequency = "Monthly"
 currency = "AUD"
+
+# The timeframe parameter:
+frequency = "Monthly"
 min_date = as_date("2011-11-28") # as.Date("2011-12-30") # as.Date("2015-09-29") # 
 max_date = as_date("2016-11-30")
 test_date = as_date("2016-12-30")

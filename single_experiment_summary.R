@@ -1,3 +1,6 @@
+# Given a linear factor model on benchmark, bond index and bond yield, in the form of an lm_object, create a data frame
+# which includes such parameters as r squared and F value.  The ticker and universe are mere labels, and the three
+# include_ parameters are to determine which factors were used in the creation of the linear model.
 single_experiment_summary = function(
     ticker,
     universe,
