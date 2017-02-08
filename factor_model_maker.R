@@ -50,7 +50,7 @@ factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, yi
         asset_and_bmark_and_factors = data.frame(index(asset_returns), asset_returns[, 1], bmark_returns[, 1], yield_returns[, 1], row.names = NULL)
         colnames(asset_and_bmark_and_factors) = c("date", "asset", "bmark", "yield")
         all_stock_factor_models = rbind(all_stock_factor_models, single_experiment_summary(ticker, "junk", include_bmark = TRUE, include_yield = TRUE, lm_object = lm(asset ~ bmark + yield, data = asset_and_bmark_and_factors)))
-        cat("ticker =", ticker, "\n")
+        # cat("ticker =", ticker, "\n")
     }
 
     # We need to return a separate factor model which shows the change of the benchmark relative the yield:

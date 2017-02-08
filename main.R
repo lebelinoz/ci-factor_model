@@ -1,3 +1,6 @@
+#######################
+## PREAMBLE:
+##  WARNING! The first few steps must be run in chunks for some reason (?).  Once you have a bmark_index, everything else ought to run smoothly.
 source('./factor_model_maker.R')
 
 # Raw Parameters for all experiment
@@ -59,50 +62,57 @@ start_date = previous_business_date_if_weekend(EOMonth(today(), -61))
 end_date = previous_business_date_if_weekend(EOMonth(today(), -1))
 tf1 = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
 
-#####################
-## CREATE THE UNIVERSE FACTOR MODEL (ufm):
-
-ufm = factor_model_maker(tf1, portfolio$sec_id, currency, bmark_index, yield_index)
-
-bmark_intercept_rel_yield = ufm$bmark_yield.lm$coefficients[1]
-bmark_beta_rel_yield = ufm$bmark_yield.lm$coefficients[2]
-
-#summary(ufm$bmark_yield.lm)
-#anova(ufm$bmark_yield.lm)
 
 #####################
-## DO THE SHOCK
+## SHOCK
+# (1 = 100 bp because the yield series I got from FactSet is multiplied by 100)
+yield_shock = 1
 
-yield_shock = 1 # (100 = 100 bp because the yield series is )
+portfolio_experiment_summary = function(tf, yield_shock, portfolio, currency, bmark_index, yield_index) {
 
-# compute change in yield log return:
-shocked_yield_log_return = log(ufm$last_yield + yield_shock) - log(ufm$last_yield)
-unshocked_yield_log_return = 0
+    #####################
+    ## CREATE THE UNIVERSE FACTOR MODEL (ufm):
 
-# use ufm$bmark_yield.lm to compute change in benchmark return:
-shocked_bmark_return = bmark_intercept_rel_yield + bmark_beta_rel_yield * shocked_yield_log_return
-unshocked_bmark_return = bmark_intercept_rel_yield # should be very close to zero.
+    ufm = factor_model_maker(tf, portfolio$sec_id, currency, bmark_index, yield_index)
 
-# pass the above two variables through ufm$stock_factor_models to get individual shocked returns
-stock_forecast_returns_with_details = mutate(ufm$stock_factor_models, 
-                                            shocked_return = intercept + bmark_beta * shocked_bmark_return + yield_beta * shocked_yield_log_return, 
-                                            unshocked_return = intercept + bmark_beta * unshocked_bmark_return + yield_beta * unshocked_yield_log_return,
-                                            delta_shock = shocked_return - unshocked_return)
+    # We now have a model which predicts benchmark moves relative yield moves:
 
-stock_forecast_returns = select(stock_forecast_returns_with_details, ticker, delta_shock)
+    bmark_intercept_rel_yield = ufm$bmark_yield.lm$coefficients[1]
+    bmark_beta_rel_yield = ufm$bmark_yield.lm$coefficients[2]
 
-# Add the individual shocks back to the original portfolio:
-portfolio_with_shocks = merge(portfolio, stock_forecast_returns, by = "ticker", all.x = TRUE)
+    ## If you're interested, here are some details of that other model:
+    #summary(ufm$bmark_yield.lm)
+    #anova(ufm$bmark_yield.lm)
 
-# ... and add a weighted_delta_shock column, turning missings into zeroes
-portfolio_with_shocks = mutate(portfolio_with_shocks, weighted_delta_shock = weight * delta_shock)
-portfolio_with_shocks$weighted_delta_shock[which(is.na(portfolio_with_shocks$weighted_delta_shock))] <- 0
+    #####################
+    ## DO THE SHOCK
+    # compute change in yield log return:
+    shocked_yield_log_return = log(ufm$last_yield + yield_shock) - log(ufm$last_yield)
+    unshocked_yield_log_return = 0
 
-# take the weighted sum of the shocked returns to get a portfolio return:
-shocked_portfolio_return = sum(portfolio_with_shocks$weighted_delta_shock) / sum(portfolio_with_shocks$weight)
+    # use ufm$bmark_yield.lm to compute change in benchmark return:
+    shocked_bmark_return = bmark_intercept_rel_yield + bmark_beta_rel_yield * shocked_yield_log_return
+    unshocked_bmark_return = bmark_intercept_rel_yield # should be very close to zero.
 
+    # pass the above two variables through ufm$stock_factor_models to get individual shocked returns
+    stock_forecast_returns_with_details = mutate(ufm$stock_factor_models, 
+                                                shocked_return = intercept + bmark_beta * shocked_bmark_return + yield_beta * shocked_yield_log_return, 
+                                                unshocked_return = intercept + bmark_beta * unshocked_bmark_return + yield_beta * unshocked_yield_log_return,
+                                                delta_shock = shocked_return - unshocked_return)
 
+    stock_forecast_returns = select(stock_forecast_returns_with_details, ticker, delta_shock)
 
+    # Add the individual shocks back to the original portfolio:
+    portfolio_with_shocks = merge(portfolio, stock_forecast_returns, by = "ticker", all.x = TRUE)
 
+    # ... and add a weighted_delta_shock column, turning missings into zeroes
+    portfolio_with_shocks = mutate(portfolio_with_shocks, weighted_delta_shock = weight * delta_shock)
+    portfolio_with_shocks$weighted_delta_shock[which(is.na(portfolio_with_shocks$weighted_delta_shock))] <- 0
 
+    # take the weighted sum of the shocked returns to get a portfolio return:
+    shocked_portfolio_return = sum(portfolio_with_shocks$weighted_delta_shock) / sum(portfolio_with_shocks$weight)
 
+    return(shocked_portfolio_return)
+}
+
+portfolio_experiment_summary(tf1, yield_shock, portfolio, currency, bmark_index, yield_index)
