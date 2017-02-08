@@ -53,5 +53,15 @@ factor_model_maker = function(tf, benchmark_code, portfolio_code, sec_id_list, c
         cat("ticker =", ticker, "\n")
     }
 
-    return(all_stock_factor_models)
+    # We need to return a separate factor model which shows the change of the benchmark relative the yield:
+    bmark_yield_df = data.frame(date = index(bmark_returns), bmark = bmark_returns[,1], yield = yield_returns[,1])
+    colnames(bmark_yield_df) = c("date", "bmark", "yield")
+    bmark_yield.lm = lm(bmark ~ yield, bmark_yield_df)
+
+    # We also the final yield in the series to shock:
+    last_date = max(index(yield_index[paste(get_start_date(tf), get_end_date(tf), sep = "/")]))
+    last_yield = as.numeric(yield_index[last_date, 1])
+
+    return_list <- list("stock_factor_models" = all_stock_factor_models, "bmark_yield.lm" = bmark_yield.lm, "last_yield" = last_yield)
+    return(return_list)
 }
