@@ -43,27 +43,38 @@ tf1 = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
 ufm = factor_model_maker(tf = tf1, benchmark_code = bmark_code, portfolio_code = pfolio_code, currency = currency, bmark_index = bmark_index, yield_index = yield_index)
 
 
+bmark_intercept_rel_yield = ufm$bmark_yield.lm$coefficients[1]
+bmark_beta_rel_yield = ufm$bmark_yield.lm$coefficients[2]
+
+#summary(ufm$bmark_yield.lm)
+#anova(ufm$bmark_yield.lm)
 
 #####################
 ## DO THE SHOCK
 
-yield_shock = 1 # (100 bp)
+yield_shock = 1 # (100 = 100 bp because the yield series is )
 
 # compute change in yield log return:
-shocked_yield_log_return = ...
+shocked_yield_log_return = log(ufm$last_yield + yield_shock) - log(ufm$last_yield)
+unshocked_yield_log_return = 0
 
 # use ufm$bmark_yield.lm to compute change in benchmark return:
-shocked_benchmark_return = ...
+shocked_bmark_return = bmark_intercept_rel_yield + bmark_beta_rel_yield * shocked_yield_log_return
+unshocked_bmark_return = bmark_intercept_rel_yield # should be very close to zero.
 
 # pass the above two variables through ufm$stock_factor_models to get individual shocked returns
-...
+stock_forecast_returns_with_details = mutate(ufm$stock_factor_models, 
+                                            shocked_return = intercept + bmark_beta * shocked_bmark_return + yield_beta * shocked_yield_log_return, 
+                                            unshocked_return = intercept + bmark_beta * unshocked_bmark_return + yield_beta * unshocked_yield_log_return,
+                                            delta_shock = shocked_return - unshocked_return)
+
+stock_forecast_returns = select(stock_forecast_returns_with_details, ticker, delta_shock)
 
 # take the weighted sum of the shocked returns to get a portfolio return:
-shocked_portfolio_return = ...
+# TO DO:  Multiply shocked and unshocked returns by portfolio weights
+# shocked_portfolio_return = ...
 
-# NOW REPEAT THE ABOVE EXERCISE WITH yield_shock = 0 to get
-...
-unshocked_portfolio_return = ...  # should hopefully be very close to zero.
+
 
 
 
