@@ -78,6 +78,7 @@ beef_test_result = filter(beef_test_result, count >= 24)
 # How do R squared correlate to predictive power?
 gb = group_by(beef_test_result, ticker)
 
+
 beef_by_ticker = summarise(gb,
     count = n(),
     avg_r2 = mean(r_squared, na.rm = TRUE),
