@@ -48,6 +48,7 @@ bmark_index = xts(bmark_index_df[,"index"], order.by = bmark_index_df[,"date"])
 # The retrieve data is daily, and 'factor_model_maker' will make it into returns with an appropriate frequency.
 setClass('myDate')
 setAs("character", "myDate", function(from) as.Date(from, format = "%m/%d/%Y"))
+
 bond_index = read.csv("C://Temp//US10YY-TU1.csv", colClasses = c('myDate', 'numeric', 'numeric')) # Some 10Y Australian Bond Index I found in FactSet.
 colnames(bond_index) = c('date', 'junk', 'yield')
 
@@ -64,7 +65,7 @@ yield_shock = 1
 
 #####################
 ## TIMEFRAME
-# For now, let's use 60-month timeframe ending at the end of the latest month.  Eventually, we can make this the dial which we can tweak.
+# For now, let's use 60-month timeframe ending at the end of the latest month.  Eventually, we can make this the dial which we can turn.
 freq = "M"
 start_date = previous_business_date_if_weekend(EOMonth(today(), -62))
 end_date = previous_business_date_if_weekend(EOMonth(today(), -1))
