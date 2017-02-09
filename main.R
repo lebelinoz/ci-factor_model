@@ -3,6 +3,7 @@
 ##  WARNING! The first few steps must be run in chunks for some reason (?).  Once you have a bmark_index, everything else ought to run smoothly.
 source('./factor_model_maker.R')
 source('./portfolio_experiment_summary.R')
+source('./show_regression.R')
 
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"
@@ -98,19 +99,35 @@ rownames(df) = NULL
 csv_filename = paste("C://Temp//portfolio_experiment_summary-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
 write.csv(df, csv_filename, row.names = FALSE)
 
-## Read the csv file we'd written earlier.
+## If starting fresh, read the csv file we'd written earlier:
+# csv_filename = paste("C://Temp//portfolio_experiment_summary-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
 # df = read.csv(csv_filename)
 # df$start_date = as_date(df$start_date)
 # df$end_date = as_date(df$end_date)
 
 
 # Let's look at how changing the timeframe affects the outputs of the model:
-ggplot(df, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio return if yield +100 bp:  model result by timespan and frequency")
-ggplot(df, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next b'mark return if yield +100 bp:  model result by timespan and frequency")
-ggplot(df, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio - bmark return if yield +100 bp:  model result by timespan and frequency")
+ggplot(df, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio return if yield 100 bp:  model result by timespan and frequency")
+ggplot(df, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next b'mark return if yield 100 bp:  model result by timespan and frequency")
+ggplot(df, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio - bmark return if yield 100 bp:  model result by timespan and frequency")
 
 
-# So why don't months < 12 work?
-start_date = previous_business_date_if_weekend(EOMonth(today(), -12))
-tf_small = timeframe(start_date = start_date, end_date = end_date, frequency = 'D')
-df_small = portfolio_experiment_summary(tf_small, yield_shock, portfolio, currency, bmark_index, yield_index)
+# Why is the model so bad?  Let's look at benchmark vs yield over the last 60 months, as well as a couple of stocks vs yields.
+bmark_returns = periodReturn(bmark_index, period = get_frequency(tf1, long.form = TRUE))[paste(get_start_date(tf1), get_end_date(tf1), sep = "/")]
+yield_returns = periodReturn(yield_index, period = get_frequency(tf1, long.form = TRUE), type = 'log')[paste(get_start_date(tf1), get_end_date(tf1), sep = "/")]
+stock_returns = stock.returns(tf1, sec_id_list = portfolio$sec_id)@xts_returns
+
+ticker = "DHR.US"
+asset_bmark_yield_df = data.frame(date = index(bmark_returns), asset = stock_returns[, ticker], bmark = bmark_returns[, 1], yield = yield_returns[, 1])
+rownames(asset_bmark_yield_df) = NULL
+colnames(asset_bmark_yield_df) = c("date", ticker, "bmark", "yield")
+
+# Show three charts:
+show_regression(asset_bmark_yield_df, "bmark", ticker)
+show_regression(asset_bmark_yield_df, "yield", "bmark")
+show_regression(asset_bmark_yield_df, "yield", ticker)
+
+# Show three charts with the same scale:
+show_regression(asset_bmark_yield_df, "bmark", ticker) + scale_x_continuous(limits = c(-0.3,0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
+show_regression(asset_bmark_yield_df, "yield", "bmark") + scale_x_continuous(limits = c(-0.3, 0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
+show_regression(asset_bmark_yield_df, "yield", ticker) + scale_x_continuous(limits = c(-0.3, 0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
