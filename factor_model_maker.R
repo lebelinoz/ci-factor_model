@@ -9,8 +9,10 @@ factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, yi
 
     # (drop all columns from the xts structure) which don't have 50% data)
     drop_count = sum(sapply(stock_returns, function(x) sum(is.na(x)) > nrow(stock_returns) / 2))
-    stock_returns = stock_returns[, - which(sapply(stock_returns, function(x) sum(is.na(x)) > nrow(stock_returns) / 2))]    
-    if (drop_count > 0) warning(paste(drop_count, "stocks(s) were dropped from the analysis due to insufficient data:  less than 50% of returns were available"))
+    if (any(which(sapply(stock_returns, function(x) sum(is.na(x)) > nrow(stock_returns) / 2)))) {
+        stock_returns = stock_returns[, - which(sapply(stock_returns, function(x) sum(is.na(x)) > nrow(stock_returns) / 2))]
+        if (drop_count > 0) warning(paste(drop_count, "stocks(s) were dropped from the analysis due to insufficient data:  less than 50% of returns were available"))
+    }
 
 
     # Step 2:  calculate and restrict the given factor returns

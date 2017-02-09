@@ -2,6 +2,7 @@
 ## PREAMBLE:
 ##  WARNING! The first few steps must be run in chunks for some reason (?).  Once you have a bmark_index, everything else ought to run smoothly.
 source('./factor_model_maker.R')
+source('./portfolio_experiment_summary.R')
 
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"
@@ -55,64 +56,61 @@ yield_index = xts(yield_index_df[, "yield"], order.by = yield_index_df[, "date"]
 
 
 #####################
+## SHOCK
+# (1 = 100 bp because the yield series I got from FactSet is multiplied by 100)
+yield_shock = 1
+
+
+#####################
 ## TIMEFRAME
 # For now, let's use 60-month timeframe ending at the end of the latest month.  Eventually, we can make this the dial which we can tweak.
 freq = "M"
-start_date = previous_business_date_if_weekend(EOMonth(today(), -61))
+start_date = previous_business_date_if_weekend(EOMonth(today(), -62))
 end_date = previous_business_date_if_weekend(EOMonth(today(), -1))
 tf1 = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
 
 
 #####################
-## SHOCK
-# (1 = 100 bp because the yield series I got from FactSet is multiplied by 100)
-yield_shock = 1
+## WHICH TIMESPAN IS BEST TO CREATE OUR MODEL?
 
-portfolio_experiment_summary = function(tf, yield_shock, portfolio, currency, bmark_index, yield_index) {
+# The portfolio experiment summary gives us the benchmark and portfolio shocked returns:
+df = portfolio_experiment_summary(tf1, yield_shock, portfolio, currency, bmark_index, yield_index)
 
-    #####################
-    ## CREATE THE UNIVERSE FACTOR MODEL (ufm):
+# Let's try different timeframes, and see if the we get wildly different numbers:
+for (i in 6:60) {
+    start_date = previous_business_date_if_weekend(EOMonth(end_date, - i))
+    cat("i = ", i, "\n")
 
-    ufm = factor_model_maker(tf, portfolio$sec_id, currency, bmark_index, yield_index)
+    tf_m = timeframe(start_date = start_date, end_date = end_date, frequency = 'M')
+    tf_w = timeframe(start_date = start_date, end_date = end_date, frequency = 'W')
+    tf_d = timeframe(start_date = start_date, end_date = end_date, frequency = 'D')
 
-    # We now have a model which predicts benchmark moves relative yield moves:
-
-    bmark_intercept_rel_yield = ufm$bmark_yield.lm$coefficients[1]
-    bmark_beta_rel_yield = ufm$bmark_yield.lm$coefficients[2]
-
-    ## If you're interested, here are some details of that other model:
-    #summary(ufm$bmark_yield.lm)
-    #anova(ufm$bmark_yield.lm)
-
-    #####################
-    ## DO THE SHOCK
-    # compute change in yield log return:
-    shocked_yield_log_return = log(ufm$last_yield + yield_shock) - log(ufm$last_yield)
-    unshocked_yield_log_return = 0
-
-    # use ufm$bmark_yield.lm to compute change in benchmark return:
-    shocked_bmark_return = bmark_intercept_rel_yield + bmark_beta_rel_yield * shocked_yield_log_return
-    unshocked_bmark_return = bmark_intercept_rel_yield # should be very close to zero.
-
-    # pass the above two variables through ufm$stock_factor_models to get individual shocked returns
-    stock_forecast_returns_with_details = mutate(ufm$stock_factor_models, 
-                                                shocked_return = intercept + bmark_beta * shocked_bmark_return + yield_beta * shocked_yield_log_return, 
-                                                unshocked_return = intercept + bmark_beta * unshocked_bmark_return + yield_beta * unshocked_yield_log_return,
-                                                delta_shock = shocked_return - unshocked_return)
-
-    stock_forecast_returns = select(stock_forecast_returns_with_details, ticker, delta_shock)
-
-    # Add the individual shocks back to the original portfolio:
-    portfolio_with_shocks = merge(portfolio, stock_forecast_returns, by = "ticker", all.x = TRUE)
-
-    # ... and add a weighted_delta_shock column, turning missings into zeroes
-    portfolio_with_shocks = mutate(portfolio_with_shocks, weighted_delta_shock = weight * delta_shock)
-    portfolio_with_shocks$weighted_delta_shock[which(is.na(portfolio_with_shocks$weighted_delta_shock))] <- 0
-
-    # take the weighted sum of the shocked returns to get a portfolio return:
-    shocked_portfolio_return = sum(portfolio_with_shocks$weighted_delta_shock) / sum(portfolio_with_shocks$weight)
-
-    return(shocked_portfolio_return)
+    df = rbind(df, portfolio_experiment_summary(tf_m, yield_shock, portfolio, currency, bmark_index, yield_index))
+    df = rbind(df, portfolio_experiment_summary(tf_w, yield_shock, portfolio, currency, bmark_index, yield_index))
+    df = rbind(df, portfolio_experiment_summary(tf_d, yield_shock, portfolio, currency, bmark_index, yield_index))
 }
 
-portfolio_experiment_summary(tf1, yield_shock, portfolio, currency, bmark_index, yield_index)
+df = df[-1,]
+rownames(df) = NULL
+
+
+# This took a few minutes:  let's export to csv and pick it up later if necessary
+csv_filename = paste("C://Temp//portfolio_experiment_summary-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
+write.csv(df, csv_filename, row.names = FALSE)
+
+## Read the csv file we'd written earlier.
+# df = read.csv(csv_filename)
+# df$start_date = as_date(df$start_date)
+# df$end_date = as_date(df$end_date)
+
+
+# Let's look at how changing the timeframe affects the outputs of the model:
+ggplot(df, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio return if yield +100 bp:  model result by timespan and frequency")
+ggplot(df, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next b'mark return if yield +100 bp:  model result by timespan and frequency")
+ggplot(df, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio - bmark return if yield +100 bp:  model result by timespan and frequency")
+
+
+# So why don't months < 12 work?
+start_date = previous_business_date_if_weekend(EOMonth(today(), -12))
+tf_small = timeframe(start_date = start_date, end_date = end_date, frequency = 'D')
+df_small = portfolio_experiment_summary(tf_small, yield_shock, portfolio, currency, bmark_index, yield_index)
