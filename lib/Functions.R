@@ -117,11 +117,15 @@ df_to_xts = function(raw_data, date_name = "Date", group_name = "Ticker", metric
     return(xts_return_index)
 }
 
-
 previous_business_date_if_weekend = function(my_date) {
-    if (weekdays(my_date) == "Sunday") { my_date = as_date(my_date) - 2 }
-    if (weekdays(my_date) == "Saturday") { my_date = as_date(my_date) - 1 }
-    return(as_date(my_date))
+    if (length(my_date) == 1) {
+        if (weekdays(my_date) == "Sunday") { my_date = as_date(my_date) - 2 }
+        if (weekdays(my_date) == "Saturday") { my_date = as_date(my_date) - 1 }
+        return(as_date(my_date))
+    } else if (length(my_date) > 1) {
+        my_date = lapply(my_date, previous_business_date_if_weekend)
+        return(my_date)
+    }
 }
 
 EOMonth = function(d, step, last_business_date = FALSE) {
@@ -135,4 +139,9 @@ EOMonth = function(d, step, last_business_date = FALSE) {
     }
 }
 
-
+## Test:
+#sat = ymd("2017-02-04")
+#sun = ymd("2017-02-05")
+#wkd = c(sat, sun)
+#friday_once = previous_business_date_if_weekend(sat)
+#friday_twice = previous_business_date_if_weekend(wkd)
