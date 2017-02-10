@@ -1,0 +1,30 @@
+---
+title: "PCGLUF shocked by US 10y Treasury Yield +100bp"
+output: html_document
+---
+
+The fools are certain and the intelligent full of doubt. 
+-Bertrand Russell
+
+To do:
+
+- Show the high correlation link between yields and bonds
+
+- Talk through and embelish the charts below
+
+- Looks like weekly data going back 2.5 gives the most stable data.  use 'single_experiment_summary.R' on this timeframe to produce a table.
+
+- If there's time, do a history of shock models, showing the results of historic shocks vs what had actually happened at the time.
+
+- Prepare to present to CD.  Then get to work doing Brunswick and AEF versions of these.
+
+
+```{r, echo=FALSE}
+source('./report_chart_PCGLUF_factor_model_results_over_time.R')
+ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version) + theme(legend.position = "bottom")
+ggplot(df_old_and_new, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next b'mark return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version) + theme(legend.position = "bottom")
+ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio - bmark return if yield 100 bp") + facet_wrap( ~ version) + theme(legend.position = "bottom")
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

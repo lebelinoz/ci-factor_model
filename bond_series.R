@@ -18,7 +18,6 @@ citi_aus_bond_index[, 3] = 100 * citi_aus_bond_index[, 3]
 
 citi_usa_bond_index = read.csv("C://Temp//SBGT.csv", colClasses = c('myDate', 'numeric', 'numeric'))
 colnames(citi_usa_bond_index) = c('date', 'citi_usa_index', 'citi_usa_yield')
-citi_usa_bond_index[, 3] = citi_usa_bond_index[, 3]
 
 citi_world_bond_index = read.csv("C://Temp//SBWGU.csv", colClasses = c('myDate', 'numeric', 'numeric'))
 colnames(citi_world_bond_index) = c('date', 'citi_world_index', 'citi_world_yield')
