@@ -10,6 +10,9 @@ bmark_code = "MSCIWORLDG"
 pfolio_code = "PCGLUF"
 currency = "AUD"
 
+# We can do historic snapshots.  Leave this string blank if you don't want any
+portfolio_date_minimum_constraint = " AND metric_date <= '2016-10-31'"
+
 ######################
 ## PORTFOLIO:
 # This will be an array of sec_id, ticker and weight
@@ -19,12 +22,14 @@ currency = "AUD"
 
 # TO DO:  Add a date restriction, so we can experiment on how well the model worked on historic portfolio weights.
 sql_pfolio = paste(
-     "SELECT sec.sec_id, REPLACE(sec.sec_ticker,'.ASX','') AS [ticker], sec.sec_name as [name], pfolio.[weight] FROM PCI_REPORTING.dbo.t_data_historic_port_weights pfolio INNER JOIN PCI_CORE.dbo.t_Ref_Sec sec ON pfolio.sec_id = sec.sec_id WHERE pfolio.acct_cd = "
+     "SELECT sec.sec_id, REPLACE(sec.sec_ticker,'.ASX','') AS [ticker], sec.sec_name as [name], pfolio.[weight] FROM PCI_REPORTING.dbo.t_data_historic_port_weights pfolio INNER JOIN PCI_CORE.dbo.t_Ref_Sec sec ON pfolio.sec_id = sec.sec_id WHERE pfolio.acct_cd = '"
     , pfolio_code
-    , " AND pfolio.metric_date IN (SELECT MAX(metric_date) FROM PCI_REPORTING.dbo.t_data_historic_port_weights WHERE acct_cd = "
+    , "' AND pfolio.metric_date IN (SELECT MAX(metric_date) FROM PCI_REPORTING.dbo.t_data_historic_port_weights WHERE acct_cd = '"
     , pfolio_code
-    , " AND sec_id IS NOT NULL)"
-    , sep = "'")
+    , "' AND sec_id IS NOT NULL "
+    , portfolio_date_minimum_constraint
+    , ")"
+    , sep = "")
 portfolio = get_table_from_sql_CISMPRDSVR(sql_pfolio)
 # Note that, due to Charles River glitchiness, sum(portfolio$weight) sometimes add to something like 1.9 (instead of 0.95).  Remember to always
 # divide final weighted-sum answers by the total weights.
@@ -78,6 +83,12 @@ end_date = previous_business_date_if_weekend(EOMonth(today(), -1))
 tf1 = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
 
 # When doing portfolio vs MSCI World on 10 Feb 2017, I found weekly data stabilizes the most quickly
+
+# When comparing against MSCI Barra's analysis from late 2016, I will use weekly data from Oct 2013 to Oct 2016
+freq = "W"
+start_date = previous_business_date_if_weekend(ymd("2013-10-31"))
+end_date = previous_business_date_if_weekend(ymd("2016-10-31"))
+tf1 = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
 
 
 #####################

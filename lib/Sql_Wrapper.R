@@ -64,3 +64,8 @@ get_ticker_xts_return_index = function(ticker_list, currency = "Local", min_date
     if (debug == 1) { print(paste("raw_data number of rows = ", nrow(raw_data))) }
     return(df_to_xts(raw_data, metric_name = "Total_Return", debug = debug))
 }
+
+
+get_watchlist = function(watchlist_name, snapshot_date, frequency = 'M') {
+
+}
