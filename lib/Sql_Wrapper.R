@@ -67,5 +67,43 @@ get_ticker_xts_return_index = function(ticker_list, currency = "Local", min_date
 
 
 get_watchlist = function(watchlist_name, snapshot_date, frequency = 'M') {
+    if (missing(snapshot_date)) snapshot_date = today()
 
+    sql_watchlist = paste(
+          "SELECT wh.sec_id, sec.sec_ticker AS [ticker], sec.sec_name AS [name] FROM PCI_CORE.dbo.watchlist_history_cleansed('M') wh INNER JOIN PCI_CORE.dbo.t_Ref_Sec sec ON wh.sec_id = sec.sec_id WHERE wh.period_start <= DATEFROMPARTS(YEAR('"
+        , snapshot_date
+        , "'), MONTH('"
+        , snapshot_date
+        , "'), 1) AND wh.period_end > '"
+        , snapshot_date
+        , "' AND wh.Watchlist = '"
+        , watchlist_name
+        , "' AND wh.research_level = 1"
+        , sep = "")
+    watchlist = get_table_from_sql_CISMPRDSVR(sql_watchlist)
+
+    # Assume equal weighting:
+    if (nrow(watchlist) > 0) watchlist = mutate(watchlist, weight = 1 / nrow(watchlist))
+
+    return(watchlist)
+}
+
+# The portfolio will be a dataframe with columns sec_id, ticker, name and weight.
+# Note that, due to Charles River glitchiness, sum(portfolio$weight) sometimes add to something like 1.9 (instead of 0.95).  Remember to always
+# divide final weighted-sum answers by the total weights.
+get_portfolio = function(portfolio_code, snapshot_date) {
+    if (missing(snapshot_date)) snapshot_date = today()
+
+    sql_pfolio = paste(
+         "SELECT sec.sec_id, REPLACE(sec.sec_ticker,'.ASX','') AS [ticker], sec.sec_name as [name], pfolio.[weight] FROM PCI_REPORTING.dbo.t_data_historic_port_weights pfolio INNER JOIN PCI_CORE.dbo.t_Ref_Sec sec ON pfolio.sec_id = sec.sec_id WHERE pfolio.acct_cd = '"
+        , portfolio_code
+        , "' AND pfolio.metric_date IN (SELECT MAX(metric_date) FROM PCI_REPORTING.dbo.t_data_historic_port_weights WHERE acct_cd = '"
+        , portfolio_code
+        , "' AND sec_id IS NOT NULL AND metric_date <= '"
+        , snapshot_date
+        , "')"
+        , sep = "")
+    portfolio = get_table_from_sql_CISMPRDSVR(sql_pfolio)
+
+    return(portfolio)
 }

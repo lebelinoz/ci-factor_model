@@ -45,7 +45,11 @@ portfolio_experiment_summary = function(tf, yield_shock, portfolio, currency, bo
     stock_forecast_returns_with_details = mutate(ufm$stock_factor_models,
                                                 shocked_return = intercept + bmark_beta * shocked_bmark_return + bond_beta * shocked_bond_return,
                                                 unshocked_return = intercept + bmark_beta * unshocked_bmark_return + bond_beta * unshocked_bond_return,
-                                                delta_shock = shocked_return - unshocked_return)
+                                                delta_shock = shocked_return - unshocked_return,
+                                                delta_shock_caused_by_bmark = bmark_beta * (shocked_bmark_return - unshocked_bmark_return),
+                                                delta_shock_caused_by_bond = bond_beta * (shocked_bond_return - unshocked_bond_return),
+                                                benchmark_delta_shock = shocked_bmark_return - unshocked_bmark_return,
+                                                delta_shock_relative_benchmark = delta_shock - benchmark_delta_shock)
 
     stock_forecast_returns = select(stock_forecast_returns_with_details, ticker, delta_shock)
 
@@ -74,5 +78,6 @@ portfolio_experiment_summary = function(tf, yield_shock, portfolio, currency, bo
         , bmark_return_delta_shock = shocked_bmark_return - unshocked_bmark_return
     )
 
-    return(df)
+    return_list <- list("portfolio_experiment_summary" = df, "stock_factor_models" = stock_forecast_returns_with_details, "bmark_factor.lm" = ufm$bmark_factor.lm)
+    return(return_list)
 }
