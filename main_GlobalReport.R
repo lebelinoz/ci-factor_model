@@ -31,12 +31,12 @@ bmark_index = xts(bmark_index_df[,"index"], order.by = bmark_index_df[,"date"])
 setClass('myDate')
 setAs("character", "myDate", function(from) as.Date(from, format = "%m/%d/%Y"))
 
-citi_usa_bond_index = read.csv("C://Temp//SBGT.csv", colClasses = c('myDate', 'numeric', 'numeric'))
+citi_usa_bond_index = read.csv(".//csv//SBGT.csv", colClasses = c('myDate', 'numeric', 'numeric'))
 colnames(citi_usa_bond_index) = c('date', 'citi_usa_index', 'citi_usa_yield')
 bond_index = xts(citi_usa_bond_index[, "citi_usa_index"], order.by = citi_usa_bond_index[, "date"])
 ggplot(citi_usa_bond_index, aes(date, citi_usa_index)) + geom_line() + ggtitle("bond = Citigroup U.S. Bond Index")
 
-us10y_yield = read.csv("C://Temp//US10YY-TU1.csv", colClasses = c('myDate', 'numeric', 'numeric'))
+us10y_yield = read.csv(".//csv//US10YY-TU1.csv", colClasses = c('myDate', 'numeric', 'numeric'))
 us10y_yield = us10y_yield[, -2]
 colnames(us10y_yield) = c('date', 'yield')
 yield_index_df = us10y_yield
