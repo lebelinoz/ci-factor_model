@@ -12,14 +12,6 @@ watchlist_name = 'Global'
 currency = "AUD"
 
 ######################
-## PORTFOLIO:
-portfolio = get_portfolio(pfolio_code)
-
-######################
-## WATCHLIST:
-watchlist = get_watchlist(watchlist_name)
-
-######################
 ## BENCHMARK:
 # Retrieve the benchmark daily index.  'factor_model_maker' will make it into returns with an appropriate frequency.
 all_bmark_returns = get_benchmark_xts_returns(bmark_code, currency, "daily")
@@ -59,25 +51,23 @@ yield_index = xts(yield_index_df[, "yield"], order.by = yield_index_df[, "date"]
 yield_shock = 1
 
 
+######################
+## PORTFOLIO:
+portfolio = get_portfolio(pfolio_code)
+
+
+######################
+## WATCHLIST:
+watchlist = get_watchlist(watchlist_name)
+
+
 #####################
 ## TIMEFRAME
-# For now, let's use 60-month timeframe ending at the end of the latest month.  Eventually, we can make this the dial which we can turn.
+# For now, let's use 3-year weekly timeframe ending at the end of the latest month.
 freq = "W"
 start_date = previous_business_date_if_weekend(EOMonth(today(), -37))
 end_date = previous_business_date_if_weekend(EOMonth(today(), -1))
 tf1 = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
-
-# When doing portfolio vs MSCI World on 10 Feb 2017, I found weekly data stabilizes the most quickly
-
-# When comparing against MSCI Barra's analysis from late 2016, I will use weekly data from Oct 2013 to Oct 2016
-#freq = "W"
-#start_date = previous_business_date_if_weekend(ymd("2013-10-31"))
-#end_date = previous_business_date_if_weekend(ymd("2016-10-31"))
-#tf1 = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
-
-
-#####################
-## WHICH TIMESPAN IS BEST TO CREATE OUR MODEL?
 
 # The portfolio experiment summary gives us the benchmark and portfolio shocked returns:
 pes_portfolio = portfolio_experiment_summary(tf1, yield_shock, portfolio, currency, bond_index, bmark_index, yield_index)
@@ -88,50 +78,50 @@ pes_watchlist = portfolio_experiment_summary(tf1, yield_shock, watchlist, curren
 df_watchlist = pes_watchlist$portfolio_experiment_summary
 stock_summary_watchlist = pes_watchlist$stock_factor_models
 
-# Let's look at the history of portfolio and watchlist shocks:
-for (i in 1:60) {
-    cat("i = ", i, "\n")
-    this_end_date = previous_business_date_if_weekend(EOMonth(end_date, - i))
-    this_start_date = previous_business_date_if_weekend(EOMonth(this_end_date, - 36))
-    this_tf = timeframe(start_date = this_start_date, end_date = this_end_date, frequency = "W")
-}
+## Let's look at the history of portfolio and watchlist shocks:
+#for (i in 1:60) {
+    #cat("i = ", i, "\n")
+    #this_end_date = previous_business_date_if_weekend(EOMonth(end_date, - i))
+    #this_start_date = previous_business_date_if_weekend(EOMonth(this_end_date, - 36))
+    #this_tf = timeframe(start_date = this_start_date, end_date = this_end_date, frequency = "W")
+#}
 
-df = df[-1,]
-rownames(df) = NULL
+#df = df[-1,]
+#rownames(df) = NULL
 
-ggplot(df, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("(v bond) Next pfolio return if yield 100 bp:  model result by timespan and frequency")
-ggplot(df, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("(v bond) Next b'mark return if yield 100 bp:  model result by timespan and frequency")
-ggplot(df, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("(v bond) Next pfolio - bmark return if yield 100 bp:  model result by timespan and frequency")
-
-
-# This took a few minutes:  let's export to csv and pick it up later if necessary
-csv_filename = paste("C://Temp//portfolio_experiment_summary_useBmarkAndBond-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
-write.csv(df, csv_filename, row.names = FALSE)
-
-df = read.csv(csv_filename)
-df$start_date = as_date(df$start_date)
-df$end_date = as_date(df$end_date)
-df_new = mutate(df, version = "vs bond")
-
-## Compare to the old methodology, where we regressed directly against the yield (log) returns:
-old_csv_filename = paste("C://Temp//portfolio_experiment_summary-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
-df_old = read.csv(old_csv_filename)
-df_old$start_date = as_date(df_old$start_date)
-df_old$end_date = as_date(df_old$end_date)
-df_old = mutate(df_old, version = "vs yield")
-
-# Merge stuff 
-df_old_and_new = rbind(df_new, df_old)
+#ggplot(df, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("(v bond) Next pfolio return if yield 100 bp:  model result by timespan and frequency")
+#ggplot(df, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("(v bond) Next b'mark return if yield 100 bp:  model result by timespan and frequency")
+#ggplot(df, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("(v bond) Next pfolio - bmark return if yield 100 bp:  model result by timespan and frequency")
 
 
-# Let's look at how changing the timeframe affects the outputs of the model:
-ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio return if yield 100 bp:  model result by timespan and frequency") + facet_wrap(~version)
-ggplot(df_old_and_new, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next b'mark return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version)
-ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio - bmark return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version)
+## This took a few minutes:  let's export to csv and pick it up later if necessary
+#csv_filename = paste("C://Temp//portfolio_experiment_summary_useBmarkAndBond-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
+#write.csv(df, csv_filename, row.names = FALSE)
+
+#df = read.csv(csv_filename)
+#df$start_date = as_date(df$start_date)
+#df$end_date = as_date(df$end_date)
+#df_new = mutate(df, version = "vs bond")
+
+### Compare to the old methodology, where we regressed directly against the yield (log) returns:
+#old_csv_filename = paste("C://Temp//portfolio_experiment_summary-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
+#df_old = read.csv(old_csv_filename)
+#df_old$start_date = as_date(df_old$start_date)
+#df_old$end_date = as_date(df_old$end_date)
+#df_old = mutate(df_old, version = "vs yield")
+
+## Merge stuff 
+#df_old_and_new = rbind(df_new, df_old)
 
 
-################################
-# Why is the model so bad?  Let's look at benchmark vs yield over the last 60 months, as well as a couple of stocks vs yields.
+## Let's look at how changing the timeframe affects the outputs of the model:
+#ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio return if yield 100 bp:  model result by timespan and frequency") + facet_wrap(~version)
+#ggplot(df_old_and_new, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next b'mark return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version)
+#ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio - bmark return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version)
+
+
+#################################
+## Why is the model so bad?  Let's look at benchmark vs yield over the last 60 months, as well as a couple of stocks vs yields.
 bmark_returns = periodReturn(bmark_index, period = get_frequency(tf1, long.form = TRUE))[paste(get_start_date(tf1), get_end_date(tf1), sep = "/")]
 bond_returns = periodReturn(bond_index, period = get_frequency(tf1, long.form = TRUE), type = 'log')[paste(get_start_date(tf1), get_end_date(tf1), sep = "/")]
 yield_returns = periodReturn(yield_index, period = get_frequency(tf1, long.form = TRUE), type = 'log')[paste(get_start_date(tf1), get_end_date(tf1), sep = "/")]
@@ -142,14 +132,16 @@ asset_bmark_yield_df = data.frame(date = index(bmark_returns), asset = stock_ret
 rownames(asset_bmark_yield_df) = NULL
 colnames(asset_bmark_yield_df) = c("date", ticker, "bmark", "bond", "yield")
 
-# Show three charts:
 show_regression(asset_bmark_yield_df, "bmark", ticker)
-#show_regression(asset_bmark_yield_df, "yield", "bmark")
-show_regression(asset_bmark_yield_df, "yield", ticker)
-show_regression(asset_bmark_yield_df, "bond", ticker)
 
-# Show three charts with the same scale:
-show_regression(asset_bmark_yield_df, "bmark", ticker) + scale_x_continuous(limits = c(-0.3,0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
-show_regression(asset_bmark_yield_df, "yield", "bmark") + scale_x_continuous(limits = c(-0.3, 0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
-show_regression(asset_bmark_yield_df, "yield", ticker) + scale_x_continuous(limits = c(-0.3, 0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
-show_regression(asset_bmark_yield_df, "bond", ticker) + scale_x_continuous(limits = c(-0.3, 0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
+## Show three charts:
+#show_regression(asset_bmark_yield_df, "bmark", ticker)
+##show_regression(asset_bmark_yield_df, "yield", "bmark")
+#show_regression(asset_bmark_yield_df, "yield", ticker)
+#show_regression(asset_bmark_yield_df, "bond", ticker)
+
+## Show three charts with the same scale:
+#show_regression(asset_bmark_yield_df, "bmark", ticker) + scale_x_continuous(limits = c(-0.3,0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
+#show_regression(asset_bmark_yield_df, "yield", "bmark") + scale_x_continuous(limits = c(-0.3, 0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
+#show_regression(asset_bmark_yield_df, "yield", ticker) + scale_x_continuous(limits = c(-0.3, 0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
+#show_regression(asset_bmark_yield_df, "bond", ticker) + scale_x_continuous(limits = c(-0.3, 0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))

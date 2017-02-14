@@ -1,30 +1,64 @@
 ---
 title: "PCGLUF shocked by US 10y Treasury Yield +100bp"
-output: html_document
+output: pdf_document
 ---
 
-The fools are certain and the intelligent full of doubt. 
--Bertrand Russell
+<!-- \begin{quote} 
+_The fools are certain and the intelligent full of doubt._  
+\end{quote}
+\hfill -Bertrand Russell
+-->
 
-To do:
+```{r, echo=FALSE, warning=FALSE}
+#source('./main_GlobalReport.R')  # <-- You really ought to only run this bit once, and can do outside the R Markdown page.
+```
 
-- Show the high correlation link between yields and bonds
+My _Interest Rate Shock Model_ is a multi factor model with only two factors:  the benchmark ($B$) and the bond index ($F$ for factor):
+$$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
+Anyone familiar with the CAPM model might recognise this formula if we drop the $F$ term: $r_t = \alpha + \beta_B r_{B,t} + \theta_t$
 
-- Talk through and embelish the charts below
+For every stock, I run a multilinear regression using three years of weekly historic data to determine the values of $\alpha$ and the two $\beta$'s.  (The $\theta_t$ is 
+a residual term which we assume will always average out to zero.  The $\alpha$ ought to be very close to zero.)  
 
-- Looks like weekly data going back 2.5 gives the most stable data.  use 'single_experiment_summary.R' on this timeframe to produce a table.
+The result is a simple linear model where, if we plug in returns of the factors, we get an estimated return of the stock.  Note that the two factors are correlated:  when I
+say "I shock the yield (or bond)", my model is also estimating a return to the benchmark and plugging it into the above linear model.
 
-- If there's time, do a history of shock models, showing the results of historic shocks vs what had actually happened at the time.
-
-- Prepare to present to CD.  Then get to work doing Brunswick and AEF versions of these.
+For the bond, I use the total return of the _Citigroup US Broad Investment-Grade Bond Index_ (as does Northfield).  I use the terms _bond_ and _yield_ interchangeably 
+because they are so closely correlated that saying "The _(return of the)_ yield goes up $x\%$" is almost the same as saying "The bond index goes 
+down $`r round(lm(bond ~ yield, asset_bmark_yield_df)$coefficients[2], 3)[1]`x\%$":
 
 
 ```{r, echo=FALSE}
-source('./report_chart_PCGLUF_factor_model_results_over_time.R')
-ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version) + theme(legend.position = "bottom")
-ggplot(df_old_and_new, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next b'mark return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version) + theme(legend.position = "bottom")
-ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio - bmark return if yield 100 bp") + facet_wrap( ~ version) + theme(legend.position = "bottom")
-
+show_regression(asset_bmark_yield_df, "bond", "yield")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Results
+
+I computed this model for each stock in the global portfolio.  Then I shock the 10Y U.S. Treasury Yield by +100 bps and calculate the estimated return of your portfolio based on
+latest weights in the database.  I find:
+
+- your portfolio returns `r paste(round(100 * df_portfolio$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`.  
+
+- the benchmark returns `r paste(round(100 * df_portfolio$bmark_return_delta_shock,2), "%", sep = "")`.  
+
+- Therefore, the portfolio underperforms by `r paste(round(100 * (df_portfolio$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio$bmark_return_delta_shock),2), "%", sep = "")`.  
+
+
+I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to Octoboer 2016).  I find:
+
+- your portfolio returns +3.0%, while Barra computed +6.4%
+
+- the benchmark returns +4.2%, while Barra computed +8.0%
+
+- My model says -1.2% underperformance, while Barra say -1.6%
+
+
+The two main differences with a true risk model (by Northfield, Barra or UBS) are:
+
+1. Most risk models use "exponentially decay weighted" observations.  This means history has a half-life, and the model puts more emphasis on recent data than older data.
+
+2. Other risk models have more factors, including:
+	+ GICS Sectors
+	+ Regions (or countries)
+	+ Oil prices
+	+ The usual quant signals such as size, Value/Growth, etc.

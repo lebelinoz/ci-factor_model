@@ -1,4 +1,11 @@
 library(tidyverse)
+library(lubridate)
+
+bmark_code = "MSCIWORLDG"
+pfolio_code = "PCGLUF"
+watchlist_name = 'Global'
+currency = "AUD"
+yield_shock = 1
 
 csv_filename = paste("C://Temp//portfolio_experiment_summary_useBmarkAndBond-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
 write.csv(df, csv_filename, row.names = FALSE)
