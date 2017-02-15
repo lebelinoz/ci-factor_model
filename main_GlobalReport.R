@@ -27,7 +27,7 @@ bmark_index = xts(bmark_index_df[,"index"], order.by = bmark_index_df[,"date"])
 ######################
 ## BOND:
 # Let's use 10y US Treasury (yield only).
-# The retrieve data is daily, and 'factor_model_maker' will make it into returns with an appropriate frequency.
+# The retrieved data is daily, and 'factor_model_maker' will make it into returns with an appropriate frequency.
 setClass('myDate')
 setAs("character", "myDate", function(from) as.Date(from, format = "%m/%d/%Y"))
 
