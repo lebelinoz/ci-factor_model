@@ -1,7 +1,9 @@
 ---
-title: "PCGLUF shocked by US 10y Treasury Yield +100bp"
+title: "Portfolio shocked by US 10y Treasury Yield +100bp"
 output: pdf_document
 ---
+
+# Portfolio is `r pfolio_code`
 
 <!-- \begin{quote} 
 _The fools are certain and the intelligent full of doubt._  
@@ -34,7 +36,7 @@ show_regression(asset_bmark_yield_df, "bond", "yield")
 
 # Results
 
-I computed this model for each stock in the global portfolio.  Then I shock the 10Y U.S. Treasury Yield by +100 bps and calculate the estimated return of your portfolio based on
+I computed this model for each stock in the `r pfolio_code` portfolio.  Then I shock the 10Y U.S. Treasury Yield by +100 bps and calculate the estimated return of your portfolio based on
 latest weights in the database.  I find:
 
 - your portfolio returns `r paste(round(100 * df_portfolio$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`.  
@@ -44,7 +46,7 @@ latest weights in the database.  I find:
 - Therefore, the portfolio underperforms by `r paste(round(100 * (df_portfolio$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio$bmark_return_delta_shock),2), "%", sep = "")`.  
 
 
-I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to Octoboer 2016).  I find:
+I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to October 2016).  I find:
 
 - your portfolio returns +3.0%, while Barra computed +6.4%
 
@@ -60,5 +62,7 @@ The two main differences with a true risk model (by Northfield, Barra or UBS) ar
 2. Other risk models have more factors, including:
 	+ GICS Sectors
 	+ Regions (or countries)
+	+ All currencies
 	+ Oil prices
 	+ The usual quant signals such as size, Value/Growth, etc.
+

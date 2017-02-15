@@ -132,11 +132,11 @@ asset_bmark_yield_df = data.frame(date = index(bmark_returns), asset = stock_ret
 rownames(asset_bmark_yield_df) = NULL
 colnames(asset_bmark_yield_df) = c("date", ticker, "bmark", "bond", "yield")
 
-# Show charts:
-show_regression(asset_bmark_yield_df, "bmark", ticker)
-show_regression(asset_bmark_yield_df, "yield", "bmark")
-show_regression(asset_bmark_yield_df, "yield", ticker)
-show_regression(asset_bmark_yield_df, "bond", ticker)
+## Show charts:
+#show_regression(asset_bmark_yield_df, "bmark", ticker)
+#show_regression(asset_bmark_yield_df, "yield", "bmark")
+#show_regression(asset_bmark_yield_df, "yield", ticker)
+#show_regression(asset_bmark_yield_df, "bond", ticker)
 
 ## Show three charts with the same scale:
 #show_regression(asset_bmark_yield_df, "bmark", ticker) + scale_x_continuous(limits = c(-0.3,0.3)) + scale_y_continuous(limits = c(-0.075, 0.125))
