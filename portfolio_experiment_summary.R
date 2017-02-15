@@ -15,13 +15,13 @@ portfolio_experiment_summary = function(tf, yield_shock, portfolio, currency, bo
     # We also the final yield in the series to shock:
     last_date = max(index(yield_index[paste(get_start_date(tf), get_end_date(tf), sep = "/")]))
     last_yield = as.numeric(yield_index[last_date, 1])
-    shocked_yield_log_return = log(last_yield + yield_shock) - log(last_yield)
+    shocked_yield_log_return = (last_yield + yield_shock) / last_yield # arithmetic.  If log, this would be slightly different
     unshocked_yield_log_return = 0
 
     # Compute how the shock changes the bond.
     # Unfortunately, we only have monthly yields vs monthly bonds.  But these seem to have high correlation even when the timespan is small.
     all_monthly_bond_index_returns = monthlyReturn(bond_index)
-    all_monthly_yield_index_returns = monthlyReturn(yield_index, type = 'log')
+    all_monthly_yield_index_returns = monthlyReturn(yield_index, type = 'arithmetic')
     monthly_bond_index_returns = all_monthly_bond_index_returns[paste(get_start_date(tf), get_end_date(tf), sep = "/")]
     monthly_yield_index_returns = all_monthly_yield_index_returns[paste(get_start_date(tf), get_end_date(tf), sep = "/")]
     bond_yield_df = merge(setNames(data.frame(index(monthly_bond_index_returns), monthly_bond_index_returns[, 1]), c("date", "bond")),

@@ -1,0 +1,53 @@
+---
+title: "Interest Rate Shock Model"
+author: "Alain LeBel"
+date: "16 February 2017"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+source('main_GlobalReport.R', echo = FALSE)
+```
+
+## What is the _Interest Rate Shock Model_?
+
+It's a multi factor model with only two factors:  the benchmark ($B$) and the bond index ($F$ for factor):
+$$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
+Anyone familiar with the CAPM model might recognise this formula if we drop the $F$ term: $r_t = \alpha + \beta_B r_{B,t} + \theta_t$
+
+For every stock, I run a **multilinear regression** using three years of weekly historic data to determine the values of $\alpha$ and the two $\beta$'s.  (The $\theta_t$ is a residual term which we assume will always average out to zero.  The $\alpha$ ought to be very close to zero.)  
+
+The result is a simple linear model where, if we plug in returns of the factors, we get an estimated return of the stock. 
+
+## The factors and the shock parameter
+
+For the benchmark, I use the _MSCI AC World_ total return index.
+
+For the bond, I use the total return of the _Citigroup US Broad Investment-Grade Bond Index_ (as does Northfield).  
+
+For the yield, I use the _U.S. 10y Treasury Yield_.
+
+When I shock the yield (by increasing it by 100 bp), I actually compute the return of the latest yield:
+$$`r round(1 + us10y_yield[nrow(us10y_yield),2], 2)`\% / `r round(us10y_yield[nrow(us10y_yield),2], 2)`\% =
+`r (1 + us10y_yield[nrow(us10y_yield),2]) / us10y_yield[nrow(us10y_yield),2]`$$
+
+## How yield changes affect bonds
+Changes in yield (which I compute as _arithmetic returns_) are highly correlated to bonds:  saying "The _(return of the)_ yield goes up $x\%$" is almost the same as saying "The bond index goes 
+down $`r round(lm(bond ~ yield, asset_bmark_yield_df)$coefficients[2], 3)[1]`x\%$":
+
+```{r bond-yield regression, echo=FALSE, fig.height=5}
+show_regression(asset_bmark_yield_df, "bond", "yield")
+```
+
+## How yield changes affect benchmarks
+
+TO DO 1:  Show the bond vs yield regression chart 
+
+TO DO 2:  "Don't forget correlation".  This will get more complicated as the number of factors blows out.
+
+## Why 3 years weekly?
+
+SHOW THE CHARTS COMPARING DIFFERENT TIMEFRAMES
+
+## Now the results:

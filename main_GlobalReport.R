@@ -134,7 +134,8 @@ colnames(asset_bmark_yield_df) = c("date", ticker, "bmark", "bond", "yield")
 
 ## Show charts:
 #show_regression(asset_bmark_yield_df, "bmark", ticker)
-#show_regression(asset_bmark_yield_df, "yield", "bmark")
+show_regression(asset_bmark_yield_df, "bmark", "yield")
+show_regression(asset_bmark_yield_df, "bond", "yield")
 #show_regression(asset_bmark_yield_df, "yield", ticker)
 #show_regression(asset_bmark_yield_df, "bond", ticker)
 

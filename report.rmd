@@ -3,7 +3,7 @@ title: "Portfolio shocked by US 10y Treasury Yield +100bp"
 output: pdf_document
 ---
 
-# Portfolio is `r pfolio_code`
+# Portfolio is PCGLUF
 
 <!-- \begin{quote} 
 _The fools are certain and the intelligent full of doubt._  
