@@ -7,7 +7,7 @@ source('./show_regression.R')
 
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"
-pfolio_code = "PCGLUF"
+# pfolio_code = "PCGLUF"
 watchlist_name = 'Global'
 currency = "AUD"
 
@@ -53,7 +53,8 @@ yield_shock = 1
 
 ######################
 ## PORTFOLIO:
-portfolio = get_portfolio(pfolio_code)
+portfolio_PCGLUF = get_portfolio("PCGLUF")
+portfolio_PCGPEN = get_portfolio("PCGPEN")
 
 
 ######################
@@ -70,9 +71,13 @@ end_date = previous_business_date_if_weekend(EOMonth(today(), -1))
 tf1 = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
 
 # The portfolio experiment summary gives us the benchmark and portfolio shocked returns:
-pes_portfolio = portfolio_experiment_summary(tf1, yield_shock, portfolio, currency, bond_index, bmark_index, yield_index)
-df_portfolio = pes_portfolio$portfolio_experiment_summary
-stock_summary_pfolio = pes_portfolio$stock_factor_models
+pes_portfolio_PCGLUF = portfolio_experiment_summary(tf1, yield_shock, portfolio_PCGLUF, currency, bond_index, bmark_index, yield_index)
+df_portfolio_PCGLUF = pes_portfolio_PCGLUF$portfolio_experiment_summary
+stock_summary_pfolio_PCGLUF = pes_portfolio_PCGLUF$stock_factor_models
+
+pes_portfolio_PCGPEN = portfolio_experiment_summary(tf1, yield_shock, portfolio_PCGPEN, currency, bond_index, bmark_index, yield_index)
+df_portfolio_PCGPEN = pes_portfolio_PCGPEN$portfolio_experiment_summary
+stock_summary_pfolio_PCGPEN = pes_portfolio_PCGPEN$stock_factor_models
 
 pes_watchlist = portfolio_experiment_summary(tf1, yield_shock, watchlist, currency, bond_index, bmark_index, yield_index)
 df_watchlist = pes_watchlist$portfolio_experiment_summary

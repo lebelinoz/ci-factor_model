@@ -61,5 +61,23 @@ PCGLUF
 PCGPEN
 
 ## How does this compare to Barra?
+I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to October 2016).  I find:
 
-How PCGLUF from Oct compares to the numbers Barra.  
+* PCGLUF estimated return is +3.0%, while Barra computed +6.4%
+
+* the benchmark estimated returns +4.2%, while Barra computed +8.0%
+
+* My model says -1.2% underperformance, while Barra say -1.6%
+
+## Why so different from other risk models?
+The two main differences with a true risk model (by Northfield, Barra or UBS) are:
+
+1. Most risk models use "exponentially decay weighted" observations.  This means history has a half-life, and the model puts more emphasis on recent data than older data.
+
+2. Other risk models have more factors, including:
+	+ GICS Sectors
+	+ Regions (or countries)
+	+ All currencies
+	+ Oil prices
+	+ The usual quant signals such as size, Value/Growth, etc.
+  
