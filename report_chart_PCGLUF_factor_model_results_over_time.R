@@ -1,32 +1,24 @@
 library(tidyverse)
 library(lubridate)
 
-bmark_code = "MSCIWORLDG"
-pfolio_code = "PCGLUF"
-watchlist_name = 'Global'
-currency = "AUD"
-yield_shock = 1
+timeseries_experiment = function(bmark_code, pfolio_code, yield_shock) {
+  #bmark_code = "MSCIWORLDG"
+  #pfolio_code = "PCGLUF"
+  #currency = "AUD"
+  #yield_shock = 1
+  
+  csv_filename = paste(".//csv//portfolio_experiment_summary_useBmarkAndBond-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
+  
+  df_new = read.csv(csv_filename)
+  df_new$start_date = dmy(df_new$start_date)
+  df_new$end_date = dmy(df_new$end_date)
+  return(df_new)
+}
 
-csv_filename = paste("C://Temp//portfolio_experiment_summary_useBmarkAndBond-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
-write.csv(df, csv_filename, row.names = FALSE)
+df_ts_experiment = timeseries_experiment("MSCIWORLDG", "PCGLUF", 1)
+head(df_ts_experiment, 5)
 
-df = read.csv(csv_filename)
-df$start_date = as_date(df$start_date)
-df$end_date = as_date(df$end_date)
-df_new = mutate(df, version = "vs bond")
+df_ts_experiment = mutate(df_ts_experiment, pfolio_return_rel_bmark = pfolio_return_delta_shock - bmark_return_delta_shock)
 
-## Compare to the old methodology, where we regressed directly against the yield (log) returns:
-old_csv_filename = paste("C://Temp//portfolio_experiment_summary-", pfolio_code, "-", bmark_code, "-yld", 100 * yield_shock, "bps.csv", sep = "")
-df_old = read.csv(old_csv_filename)
-df_old$start_date = as_date(df_old$start_date)
-df_old$end_date = as_date(df_old$end_date)
-df_old = mutate(df_old, version = "vs yield")
+#ggplot(df_ts_experiment, aes(months, pfolio_return_rel_bmark, colour = frequency)) + geom_line() + ggtitle("Next pfolio rel return if yield +100 bp:  model result by timespan and frequency")
 
-# Merge stuff 
-df_old_and_new = rbind(df_new, df_old)
-
-
-## Let's look at how changing the timeframe affects the outputs of the model:
-#ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version)
-#ggplot(df_old_and_new, aes(months, bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next b'mark return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version)
-#ggplot(df_old_and_new, aes(months, pfolio_return_delta_shock - bmark_return_delta_shock, colour = frequency)) + geom_line() + ggtitle("Next pfolio - bmark return if yield 100 bp:  model result by timespan and frequency") + facet_wrap( ~ version)
