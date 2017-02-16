@@ -130,7 +130,7 @@ stock_summary_watchlist = pes_watchlist$stock_factor_models
 bmark_returns = periodReturn(bmark_index, period = get_frequency(tf1, long.form = TRUE))[paste(get_start_date(tf1), get_end_date(tf1), sep = "/")]
 bond_returns = periodReturn(bond_index, period = get_frequency(tf1, long.form = TRUE), type = 'log')[paste(get_start_date(tf1), get_end_date(tf1), sep = "/")]
 yield_returns = periodReturn(yield_index, period = get_frequency(tf1, long.form = TRUE), type = 'log')[paste(get_start_date(tf1), get_end_date(tf1), sep = "/")]
-stock_returns = stock.returns(tf1, sec_id_list = portfolio$sec_id)@xts_returns
+stock_returns = stock.returns(tf1, sec_id_list = portfolio_PCGLUF$sec_id)@xts_returns
 
 ticker = "AON.US"
 asset_bmark_yield_df = data.frame(date = index(bmark_returns), asset = stock_returns[, ticker], bmark = bmark_returns[, 1], bond = bond_returns[, 1], yield = yield_returns[, 1])

@@ -38,14 +38,17 @@ _Returns of the yield_ <!-- (which I compute as _arithmetic returns_) --> are hi
 ```{r bond-yield regression, echo=FALSE, fig.height=5}
 show_regression(asset_bmark_yield_df, "bond", "yield")
 ```
-
+<!-- This chart should look good.  Point out that this is *not* the part of the model we should worry about. -->
 
 ## How yield affect benchmark returns
+TO DO:  Add George Box quote "All models are wrong but some are useful"
+
 _Don't forget correlation:_  If the bond changes, then the benchmark will change, too:
 
 ```{r benchmark-bond regression, echo=FALSE, fig.height=5}
 show_regression(asset_bmark_yield_df, "bmark", "bond")
 ``` 
+<!-- This chart should look bad.  Say:  "This ought to ought to underline the imperfection in the models.  Note that the 'big boy' risk models are no better, drawing 'lines drawn clouds of dots' just like this." -->
 
 
 ## Why 3 years weekly?
@@ -56,9 +59,15 @@ ggplot(df_ts_experiment, aes(months, pfolio_return_rel_bmark, colour = frequency
 ```
 
 ## Now the results:
+I computed this model for each stock in the global portfolios (GLUF and Global Pensions).  Then I shock the 10Y U.S. Treasury Yield by +100 bps and calculate the estimated return of your portfolio based on latest weights in the database.  I find:
 
-PCGLUF
-PCGPEN
+- PCGLUF estimated return = `r paste(round(100 * df_portfolio_PCGLUF$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`.  
+
+- benchmark estimated return = `r paste(round(100 * df_portfolio_PCGLUF$bmark_return_delta_shock,2), "%", sep = "")`.  
+
+- Therefore, we estimate PCGLUF would underperform by `r paste(round(100 * (df_portfolio_PCGLUF$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGLUF$bmark_return_delta_shock),2), "%", sep = "")` in this scenario.
+
+Similarly, PCGPEN estimated return is `r paste(round(100 * df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`, or `r paste(round(100 * (df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGPEN$bmark_return_delta_shock),2), "%", sep = "")` relative the MSCI AC World Total Return Index.
 
 ## How does this compare to Barra?
 I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to October 2016).  I find:
