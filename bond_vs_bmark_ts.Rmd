@@ -1,0 +1,41 @@
+---
+title: "Bond vs Equity Time Series"
+author: "Alain LeBel"
+date: "16 February 2017"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+source('bond_vs_bmark_ts.R', echo = FALSE)
+```
+
+## Beta of MSCI AC World vs Bond Index
+```{r, echo = FALSE}
+ggplot(bmark_bond_ts, aes(end_date, beta)) + geom_line() + ggtitle(paste(bmark_code, " vs Bond:  Beta", sep=""))
+```
+
+## R-squared of MSCI AC World vs Bond Index
+```{r, echo = FALSE}
+ggplot(bmark_bond_ts, aes(end_date, r.squared)) + geom_line() + ggtitle(paste(bmark_code, " vs Bond:  R-squared", sep = ""))
+```
+
+## Beta of MSCI AC World vs S&P 500
+```{r, echo = FALSE}
+ggplot(msci_sp500_ts, aes(end_date, beta)) + geom_line() + ggtitle(paste(bmark_code, " vs S&P 500:  Beta", sep = ""))
+```
+
+## R-squared of MSCI AC World vs S&P 500
+```{r, echo = FALSE}
+ggplot(msci_sp500_ts, aes(end_date, r.squared)) + geom_line() + ggtitle(paste(bmark_code, " vs S&P 500:  R-squared", sep = ""))
+```
+
+## Beta of S&P 500 vs Bond Index 
+```{r, echo = FALSE}
+ggplot(sp500_bond_ts, aes(end_date, beta)) + geom_line() + ggtitle(paste(sp500_code, " vs Bond:  Beta", sep = ""))
+```
+
+## R-squared of S&P 500 vs Bond Index 
+```{r, echo = FALSE}
+ggplot(sp500_bond_ts, aes(end_date, r.squared)) + geom_line() + ggtitle(paste(sp500_code, " vs Bond:  R-squared", sep = ""))
+```

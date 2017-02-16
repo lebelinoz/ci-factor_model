@@ -81,3 +81,7 @@ for (end_date in sort(sp500_bond_df$date, decreasing = TRUE)) {
 rownames(sp500_bond_ts) = NULL
 ggplot(sp500_bond_ts, aes(end_date, beta)) + geom_line() + ggtitle(paste(sp500_code, " vs Bond:  Beta", sep = ""))
 ggplot(sp500_bond_ts, aes(end_date, r.squared)) + geom_line() + ggtitle(paste(sp500_code, " vs Bond:  R-squared", sep = ""))
+
+
+# Combine the two onto one chart:
+
