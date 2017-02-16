@@ -4,45 +4,30 @@
 source('./factor_model_maker.R')
 source('./portfolio_experiment_summary.R')
 source('./show_regression.R')
+source('./get_benchmark_index.R')
+source('./get_bond_index.R')
+source('./get_yield_index.R')
 
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"
-# pfolio_code = "PCGLUF"
 watchlist_name = 'Global'
 currency = "AUD"
 
 ######################
-## BENCHMARK:
-# Retrieve the benchmark daily index.  'factor_model_maker' will make it into returns with an appropriate frequency.
-all_bmark_returns = get_benchmark_xts_returns(bmark_code, currency, "daily")
-all_bmark_returns = all_bmark_returns[paste(ymd("2001-01-01"), today(), sep = "/")]
-bmark_returns_df = data.frame(index(all_bmark_returns), 1 + all_bmark_returns[, 1])
-colnames(bmark_returns_df) = c("date", "returns")
-bmark_returns_df = rbind(data.frame(date = c(previous_business_date_if_weekend(ymd("2000-12-31"))), returns = c(1)), bmark_returns_df)
-bmark_index_df = select(mutate(bmark_returns_df, index = cumprod(returns)), date, index)
-ggplot(bmark_index_df, aes(date, index)) + geom_line() + ggtitle(paste("benchmark = ", bmark_code))
-bmark_index = xts(bmark_index_df[,"index"], order.by = bmark_index_df[,"date"])
-
-
-######################
-## BOND:
-# Let's use 10y US Treasury (yield only).
+## BENCHMARK, BOND & YIELD:
 # The retrieved data is daily, and 'factor_model_maker' will make it into returns with an appropriate frequency.
-setClass('myDate')
-setAs("character", "myDate", function(from) as.Date(from, format = "%m/%d/%Y"))
 
-citi_usa_bond_index = read.csv(".//csv//SBGT.csv", colClasses = c('myDate', 'numeric', 'numeric'))
-colnames(citi_usa_bond_index) = c('date', 'citi_usa_index', 'citi_usa_yield')
-bond_index = xts(citi_usa_bond_index[, "citi_usa_index"], order.by = citi_usa_bond_index[, "date"])
-ggplot(citi_usa_bond_index, aes(date, citi_usa_index)) + geom_line() + ggtitle("bond = Citigroup U.S. Bond Index")
+bmark_index = get_benchmark_index(bmark_code, currency)
+ggplot(setNames(data.frame(date = index(bmark_index), index = bmark_index[, 1]), c("date", "bmark")), aes(date, bmark)) + geom_line() + ggtitle(paste("benchmark = ", bmark_code))
 
-us10y_yield = read.csv(".//csv//US10YY-TU1.csv", colClasses = c('myDate', 'numeric', 'numeric'))
-us10y_yield = us10y_yield[, -2]
-colnames(us10y_yield) = c('date', 'yield')
-yield_index_df = us10y_yield
+# Let's use Citigroup USBIG Treasury (bond index only...  the yield data is monthly)
+bond_index = get_bond_index()
+ggplot(setNames(data.frame(date = index(bond_index), bond = bond_index[, 1]), c("date", "bond")), aes(date, bond)) + geom_line() + ggtitle("bond = Citigroup U.S. Bond Index")
 
-ggplot(yield_index_df, aes(date, yield)) + geom_line() + ggtitle("yield = US 10-year treasury")
-yield_index = xts(yield_index_df[, "yield"], order.by = yield_index_df[, "date"])
+# Use U.S. 10y Treasury Yield
+yield_index = get_yield_index()
+ggplot(setNames(data.frame(date = index(yield_index), yield = yield_index[, 1]), c("date", "yield")), aes(date, yield)) + geom_line() + ggtitle("yield = US 10-year treasury")
+
 # see 'bond_series.R' for charts to convince you of the high correlation between this bond and this yield
 
 #####################
@@ -52,13 +37,9 @@ yield_shock = 1
 
 
 ######################
-## PORTFOLIO:
+## PORTFOLIOS AND WATCHLIST:
 portfolio_PCGLUF = get_portfolio("PCGLUF")
 portfolio_PCGPEN = get_portfolio("PCGPEN")
-
-
-######################
-## WATCHLIST:
 watchlist = get_watchlist(watchlist_name)
 
 

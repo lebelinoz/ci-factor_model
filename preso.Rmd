@@ -10,8 +10,10 @@ knitr::opts_chunk$set(echo = FALSE)
 source('main_GlobalReport.R', echo = FALSE)
 source('report_chart_PCGLUF_factor_model_results_over_time.R', echo = FALSE)
 ```
-
 ## What is the _Interest Rate Shock Model_?
+<!-- Remember, you can render this in Visual Studio by going:
+	rmarkdown::render('preso.Rmd')
+at the command line.  In practice, these preso's are easier to work on from RStudio. -->
 Start with multi factor model with only two factors, being the benchmark equity index ($B$) and the bond index ($F$ for fixed income):
 $$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
 <!-- (The $\theta_t$ is a residual term which we assume will always average out to zero.  The $\alpha$ ought to be very close to zero.)  --> 
@@ -26,9 +28,9 @@ For the bond, I use the total return of the _Citigroup US Broad Investment-Grade
 
 For the yield, I use the _U.S. 10y Treasury Yield_.
 
-When I shock the yield (by increasing it by 100 bp), I actually compute the return of the latest yield:
-$$`r round(1 + us10y_yield[nrow(us10y_yield),2], 2)`\% / `r round(us10y_yield[nrow(us10y_yield),2], 2)`\% =
-`r (1 + us10y_yield[nrow(us10y_yield),2]) / us10y_yield[nrow(us10y_yield),2]`$$
+When I shock the yield (by increasing it by 100 bp), I actually compute the log return of the latest yield:
+$$log(`r round(1 + yield_index[nrow(yield_index),1], 2)`\%) - log(`r round(yield_index[nrow(yield_index),1], 2)`\%) =
+`r round(log(1 + yield_index[nrow(yield_index),1]) - log(yield_index[nrow(yield_index),1]), 4)`$$
 is the "return of the yield" shock.  I use this to estimate the returns of the benchmark and bond index.
 
 
