@@ -20,9 +20,12 @@ bmark_returns = monthlyReturn(bmark_index)
 sp500_returns = monthlyReturn(sp500_index)
 bond_returns = monthlyReturn(bond_index)
 
-bmark_df = setNames(data.frame(date = index(bmark_returns), bmark = bmark_returns[, 1]), c("date", "bmark"))
-sp500_df = setNames(data.frame(date = index(sp500_returns), bmark = sp500_returns[, 1]), c("date", "sp500"))
-bond_df = setNames(data.frame(date = index(bond_returns), bond = bond_returns[, 1]), c("date", "bond"))
+bmark_df = setNames(data.frame(date = (index(bmark_returns)), bmark = bmark_returns[, 1]), c("date", "bmark"))
+sp500_df = setNames(data.frame(date = (index(sp500_returns)), bmark = sp500_returns[, 1]), c("date", "sp500"))
+bond_df = setNames(data.frame(date = (index(bond_returns)), bond = bond_returns[, 1]), c("date", "bond"))
+rownames(bmark_df) = NULL
+rownames(sp500_df) = NULL
+rownames(bond_df) = NULL
 
 num_years = 4
 days_diff = num_years * 366

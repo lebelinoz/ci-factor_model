@@ -65,6 +65,15 @@ get_ticker_xts_return_index = function(ticker_list, currency = "Local", min_date
     return(df_to_xts(raw_data, metric_name = "Total_Return", debug = debug))
 }
 
+get_ticker_xts_t_data_fs_eps = function(ticker, metric) {
+    sql = "SELECT metric_date AS [date], metric_value FROM PCI_REPORTING.dbo.t_data_fs_eps WHERE sec_id = dbo.GetSecId('"
+    sql = paste(sql, ticker, "') AND fs_code = '", metric, "' ORDER BY metric_date", sep = "")
+
+    df = get_table_from_sql_CISMPRDSVR(sql)
+    return_xts = xts(df[, 2], order.by = as_date(df[, 1]))
+    return(return_xts)
+}
+
 
 get_watchlist = function(watchlist_name, snapshot_date, frequency = 'M') {
     if (missing(snapshot_date)) snapshot_date = today()

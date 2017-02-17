@@ -36,7 +36,7 @@ ggplot(setNames(data.frame(date = index(yield_index), yield = yield_index[, 1]),
 yield_shock = 1
 
 
-######################
+#####################
 ## PORTFOLIOS AND WATCHLIST:
 portfolio_PCGLUF = get_portfolio("PCGLUF")
 portfolio_PCGPEN = get_portfolio("PCGPEN")

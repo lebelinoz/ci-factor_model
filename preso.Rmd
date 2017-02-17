@@ -14,7 +14,7 @@ source('bond_vs_bmark_ts.R', echo = FALSE)
 ## What is the _Interest Rate Shock Model_?
 <!-- Remember, you can render this in Visual Studio by going:
 	rmarkdown::render('preso.Rmd')
-at the command line.  In practice, these preso's are easier to work on from RStudio. -->
+at the command line.  In practice, these presos are easier to work on from RStudio. -->
 > "The fools are certain and the intelligent full of doubt." --- Bertrand Russell
 
 Start with multi factor model with only two factors, being the benchmark equity index ($B$) and the bond index ($F$ for fixed income):
