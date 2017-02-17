@@ -9,41 +9,41 @@ output: beamer_presentation
 knitr::opts_chunk$set(echo = FALSE)
 source('main_GlobalReport.R', echo = FALSE)
 source('report_chart_PCGLUF_factor_model_results_over_time.R', echo = FALSE)
+source('bond_vs_bmark_ts.R', echo = FALSE)
 ```
 ## What is the _Interest Rate Shock Model_?
 <!-- Remember, you can render this in Visual Studio by going:
 	rmarkdown::render('preso.Rmd')
 at the command line.  In practice, these preso's are easier to work on from RStudio. -->
+> "The fools are certain and the intelligent full of doubt." --- Bertrand Russell
+
 Start with multi factor model with only two factors, being the benchmark equity index ($B$) and the bond index ($F$ for fixed income):
 $$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
 <!-- (The $\theta_t$ is a residual term which we assume will always average out to zero.  The $\alpha$ ought to be very close to zero.)  --> 
 For every stock, I run a **multilinear regression** using three years of weekly historic data to determine the values of $\alpha$ and the two $\beta$'s. The result is a simple linear model: plug in returns of the two factors to get an estimated return of the stock. 
 
-To build a complete _Interest Rate Shock Model_, we use simpler 1-factor models to estimate how yield changes affect the two factor returns, and plug those estimates into the above equation.
+To build a complete _Interest Rate Shock Model_, we use simpler 1-factor models to estimate how yield changes affect the benchmark and bond returns, then plug those estimates into the above equation.
 
 ## The factors and the shock parameter
-For the benchmark, I use the _MSCI AC World_ total return index.
+For the benchmark, use the _MSCI AC World_ total return index.
 
-For the bond, I use the total return of the _Citigroup US Broad Investment-Grade Bond Index_ (as does Northfield).  
-
-For the yield, I use the _U.S. 10y Treasury Yield_.
-
-When I shock the yield (by increasing it by 100 bp), I actually compute the log return of the latest yield:
+For the yield, use the _U.S. 10y Treasury Yield_.  When I shock the yield (by increasing it by 100 bp), I actually compute the log return of the latest yield:
 $$log(`r round(1 + yield_index[nrow(yield_index),1], 2)`\%) - log(`r round(yield_index[nrow(yield_index),1], 2)`\%) =
 `r round(log(1 + yield_index[nrow(yield_index),1]) - log(yield_index[nrow(yield_index),1]), 4)`$$
-is the "return of the yield" shock.  I use this to estimate the returns of the benchmark and bond index.
+is the "return of the yield" shock.  I use this to estimate the shocked returns of the benchmark and bond index.
 
+For the bond, use _Citigroup US Broad Investment-Grade Treasury Bond Index_.  It measures "the total rate of return performance for bond markets with a remaining maturity of at least one year" and is "composed of US Treasuries excluding Federal Reserve purchases, inflation-indexed securities and STRIPS" _(?)_.  Northfield tends to use Citigroup fixed-income indices, and for this yield I find the correlation to be very good (see next page).
 
-## How yield affect bond index returns
-_Returns of the yield_ <!-- (which I compute as _arithmetic returns_) --> are highly correlated to bonds:  saying "The (return of the) yield goes up $x\%$" is almost the same as saying "The bond index goes down $`r round(lm(bond ~ yield, asset_bmark_yield_df)$coefficients[2], 3)[1]`x\%$":
+## How yield affects bond index returns
+_Returns of the yield_ are highly correlated to bonds:  saying "The (return of the) yield is $+x\%$" is almost the same as saying "The bond index goes down $`r round(lm(bond ~ yield, asset_bmark_yield_df )$coefficients[2], 3)[1]`x\%$":
 
 ```{r bond-yield regression, echo=FALSE, fig.height=5}
 show_regression(asset_bmark_yield_df, "bond", "yield")
 ```
 <!-- This chart should look good.  Point out that this is *not* the part of the model we should worry about. -->
 
-## How yield affect benchmark returns
-TO DO:  Add George Box quote "All models are wrong but some are useful"
+## How yield affects benchmark returns
+> "All models are wrong but some are useful" --- George Box
 
 _Don't forget correlation:_  If the bond changes, then the benchmark will change, too:
 
@@ -52,11 +52,17 @@ show_regression(asset_bmark_yield_df, "bmark", "bond")
 ``` 
 <!-- This chart should look bad.  Say:  "This ought to ought to underline the imperfection in the models.  Note that the 'big boy' risk models are no better, drawing 'lines drawn clouds of dots' just like this." -->
 
+## Equities vs fixed income
+Disclaimer:  benchmarks and bonds now have low correlation _(remember:  correlation$^2 = R^2$)_ and are inversely related ($\beta < 0$)
+
+```{r benchmark-bond relationships over time, echo=FALSE, fig.height=6}
+ggplot(melted_ts_combo, aes(end_date, value, colour = benchmark)) + geom_line() + ggtitle("Benchmarks vs Bond:  Beta & R-squared (4y monthly rolling)") + facet_wrap(~metric) + theme(legend.position="bottom")
+```
 
 ## Why 3 years weekly?
 We tried all timespans from six months to five years, with daily, weekly and monthly frequencies:
 
-```{r pfolio_rel_estimates_over_times, echo=FALSE}
+```{r pfolio_rel_estimates_over_times, echo=FALSE, fig.height = 6}
 ggplot(df_ts_experiment, aes(months, pfolio_return_rel_bmark, colour = frequency)) + geom_line() + ggtitle("Next pfolio rel return if yield +100 bp:  model result by timespan and frequency")
 ```
 
@@ -70,6 +76,10 @@ I computed this model for each stock in the global portfolios (GLUF and Global P
 - Therefore, we estimate PCGLUF would underperform by `r paste(round(100 * (df_portfolio_PCGLUF$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGLUF$bmark_return_delta_shock),2), "%", sep = "")` in this scenario.
 
 Similarly, PCGPEN estimated return is `r paste(round(100 * df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`, or `r paste(round(100 * (df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGPEN$bmark_return_delta_shock),2), "%", sep = "")` relative the MSCI AC World Total Return Index.
+
+## How the results changed through history
+
+TO DO:  Draw a chart of the benchmark and portfolio estimated shocks through history.
 
 ## How does this compare to Barra?
 I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to October 2016).  I find:
@@ -86,9 +96,10 @@ The two main differences with a true risk model (by Northfield, Barra or UBS) ar
 1. Most risk models use "exponentially decay weighted" observations.  This means history has a half-life, and the model puts more emphasis on recent data than older data.
 
 2. Other risk models have more factors, including:
-	+ GICS Sectors
-	+ Regions (or countries)
-	+ All currencies
+	+ Sectors (GICS or otherwise)
+	+ Regions or countries
+	+ Currencies
 	+ Oil prices
-	+ The usual quant signals such as size, Value/Growth, etc.
+	+ The usual quant signals (size, Value/Growth, etc)
+	+ Some economic signals (IP, Slope of the Term Structure, etc)
   

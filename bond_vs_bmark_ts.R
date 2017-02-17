@@ -16,23 +16,26 @@ bond_index = get_bond_index()
 #ggplot(setNames(data.frame(date = index(sp500_index), bmark = sp500_index[, 1]), c("date", "bmark")), aes(date, bmark)) + geom_line() + ggtitle(paste("benchmark = ", "S&P500 (in USD)", sep = ""))
 #ggplot(setNames(data.frame(date = index(bond_index), bond = bond_index[, 1]), c("date", "bond")), aes(date, bond)) + geom_line() + ggtitle("bond = Citigroup U.S. Bond Index")
 
-bmark_returns = weeklyReturn(bmark_index)
-sp500_returns = weeklyReturn(sp500_index)
-bond_returns = weeklyReturn(bond_index)
+bmark_returns = monthlyReturn(bmark_index)
+sp500_returns = monthlyReturn(sp500_index)
+bond_returns = monthlyReturn(bond_index)
 
 bmark_df = setNames(data.frame(date = index(bmark_returns), bmark = bmark_returns[, 1]), c("date", "bmark"))
 sp500_df = setNames(data.frame(date = index(sp500_returns), bmark = sp500_returns[, 1]), c("date", "sp500"))
 bond_df = setNames(data.frame(date = index(bond_returns), bond = bond_returns[, 1]), c("date", "bond"))
 
+num_years = 4
+days_diff = num_years * 366
+min_rows = num_years * 12 - 3
+
 # MSCIWORLDG vs BOND:
 bmark_bond_df = merge(bmark_df, bond_df, by = "date")
 bmark_bond_ts = data.frame(start_date = character(), end_date = character(), beta = numeric(), r.squared = numeric())
 for (end_date in sort(bmark_bond_df$date, decreasing = TRUE)) {
-    days_diff = 52 * 7 * 3
     end_date = as_date(end_date) # Strangely, we get a "POXITs" error if we don't do this.
     start_date = as_date(end_date - days_diff)
     this.df = filter(bmark_bond_df, date > start_date, date <= end_date)
-    if (nrow(this.df) >= 52 * 3 - 1) {
+    if (nrow(this.df) >= min_rows) {
         this.lm = lm(bmark ~ bond, this.df)
         beta = this.lm$coefficients[2]
         r.squared = summary(this.lm)$r.squared
@@ -48,11 +51,10 @@ ggplot(bmark_bond_ts, aes(end_date, r.squared)) + geom_line() + ggtitle(paste(bm
 msci_sp500_df = merge(bmark_df, sp500_df, by = "date")
 msci_sp500_ts = data.frame(start_date = character(), end_date = character(), beta = numeric(), r.squared = numeric())
 for (end_date in sort(msci_sp500_df$date, decreasing = TRUE)) {
-    days_diff = 52 * 7 * 3
     end_date = as_date(end_date) # Strangely, we get a "POXITs" error if we don't do this.
     start_date = as_date(end_date - days_diff)
     this.df = filter(msci_sp500_df, date > start_date, date <= end_date)
-    if (nrow(this.df) >= 52 * 3 - 1) {
+    if (nrow(this.df) >= min_rows) {
         this.lm = lm(bmark ~ sp500, this.df)
         beta = this.lm$coefficients[2]
         r.squared = summary(this.lm)$r.squared
@@ -67,11 +69,10 @@ ggplot(msci_sp500_ts, aes(end_date, r.squared)) + geom_line() + ggtitle(paste(bm
 sp500_bond_df = merge(sp500_df, bond_df, by = "date")
 sp500_bond_ts = data.frame(start_date = character(), end_date = character(), beta = numeric(), r.squared = numeric())
 for (end_date in sort(sp500_bond_df$date, decreasing = TRUE)) {
-    days_diff = 52 * 7 * 3
     end_date = as_date(end_date) # Strangely, we get a "POXITs" error if we don't do this.
     start_date = as_date(end_date - days_diff)
     this.df = filter(sp500_bond_df, date > start_date, date <= end_date)
-    if (nrow(this.df) >= 52 * 3 - 1) {
+    if (nrow(this.df) >= min_rows) {
         this.lm = lm(sp500 ~ bond, this.df)
         beta = this.lm$coefficients[2]
         r.squared = summary(this.lm)$r.squared
@@ -84,4 +85,9 @@ ggplot(sp500_bond_ts, aes(end_date, r.squared)) + geom_line() + ggtitle(paste(sp
 
 
 # Combine the two onto one chart:
+ts_combo = rbind(mutate(bmark_bond_ts, benchmark = "MSCI"), mutate(sp500_bond_ts, benchmark = "S&P500"))
+ggplot(ts_combo, aes(end_date, beta, colour = benchmark)) + geom_line() + ggtitle("Benchmarks vs Bond:  Beta")
+ggplot(ts_combo, aes(end_date, r.squared, colour = benchmark)) + geom_line() + ggtitle("Benchmarks vs Bond:  R-squared")
 
+melted_ts_combo = reshape2::melt(ts_combo, id.vars = c("start_date", "end_date", "benchmark"), measure.vars = c("beta", "r.squared"), variable.name = "metric")
+ggplot(melted_ts_combo, aes(end_date, value, colour = benchmark)) + geom_line() + ggtitle("Benchmarks vs Bond:  R-squared") + facet_wrap(~metric) + theme(legend.position="bottom")

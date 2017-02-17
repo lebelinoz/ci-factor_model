@@ -39,3 +39,13 @@ ggplot(sp500_bond_ts, aes(end_date, beta)) + geom_line() + ggtitle(paste(sp500_c
 ```{r, echo = FALSE}
 ggplot(sp500_bond_ts, aes(end_date, r.squared)) + geom_line() + ggtitle(paste(sp500_code, " vs Bond:  R-squared", sep = ""))
 ```
+
+## Beta of benchmarks vs bond index
+```{r, echo = FALSE}
+ggplot(ts_combo, aes(end_date, beta, colour = benchmark)) + geom_line() + ggtitle("Benchmarks vs Bond:  Beta")
+```
+
+## R-squared of benchmarks vs bond index
+```{r, echo = FALSE}
+ggplot(ts_combo, aes(end_date, r.squared, colour = benchmark)) + geom_line() + ggtitle("Benchmarks vs Bond:  R-squared")
+```
