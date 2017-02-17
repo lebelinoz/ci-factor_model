@@ -20,8 +20,8 @@ portfolio_experiment_summary = function(tf, yield_shock, portfolio, currency, bo
 
     # Compute how the shock changes the bond.
     # Unfortunately, we only have monthly yields vs monthly bonds.  But these seem to have high correlation even when the timespan is small.
-    all_monthly_bond_index_returns = monthlyReturn(bond_index)
-    all_monthly_yield_index_returns = monthlyReturn(yield_index, type = 'log')
+    all_monthly_bond_index_returns = periodReturn(bond_index, period = get_frequency(tf, long.form = TRUE))
+    all_monthly_yield_index_returns = periodReturn(yield_index, period = get_frequency(tf, long.form = TRUE), type = 'log')
     monthly_bond_index_returns = all_monthly_bond_index_returns[paste(get_start_date(tf), get_end_date(tf), sep = "/")]
     monthly_yield_index_returns = all_monthly_yield_index_returns[paste(get_start_date(tf), get_end_date(tf), sep = "/")]
     bond_yield_df = merge(setNames(data.frame(index(monthly_bond_index_returns), monthly_bond_index_returns[, 1]), c("date", "bond")),

@@ -116,3 +116,4 @@ get_portfolio = function(portfolio_code, snapshot_date) {
 
     return(portfolio)
 }
+
