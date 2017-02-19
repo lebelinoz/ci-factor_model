@@ -7,7 +7,7 @@ source('./show_regression.R')
 source('./get_benchmark_index.R')
 source('./get_bond_index.R')
 source('./get_yield_index.R')
-library(reshape2)
+# library(reshape2)
 
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"
@@ -15,40 +15,45 @@ pfolio_code = "PCGLUF"
 currency = "AUD"
 yield_shock = 1
 
-# The factors:
-bmark_index = get_benchmark_index(bmark_code, currency)
-bond_index = get_bond_index()
-yield_index = get_yield_index()
+##########################
+## HARD PART:  Only run this once, and it saves to a csv file
 
-# Use 3-year weekly timeframe ending at the end of the latest month.
-freq = "W"
-end_date = previous_business_date_if_weekend(EOMonth(today(), -1))
-start_date = previous_business_date_if_weekend(EOMonth(end_date, -36))
-tf = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
+## The factors:
+#bmark_index = get_benchmark_index(bmark_code, currency)
+#bond_index = get_bond_index()
+#yield_index = get_yield_index()
 
-# Get the portfolio snapshot at the time
-portfolio = get_portfolio(pfolio_code, end_date)
-pes_portfolio = portfolio_experiment_summary(tf, yield_shock, portfolio, currency, bond_index, bmark_index, yield_index)
-main_df = mutate(pes_portfolio$portfolio_experiment_summary, start_date = start_date, end_date = end_date)
+## Use 3-year weekly timeframe ending at the end of the latest month.
+#freq = "W"
+#end_date = previous_business_date_if_weekend(EOMonth(today(), -1))
+#start_date = previous_business_date_if_weekend(EOMonth(end_date, -36))
+#tf = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
 
-# Now repeat the experiment for every EOMonth over the last five years
-for (i in 1:60) {
-    cat("i = ", i, "\n")
-    end_date = previous_business_date_if_weekend(EOMonth(end_date, -1))
-    start_date = previous_business_date_if_weekend(EOMonth(end_date, -36))
-    tf = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
-    portfolio = get_portfolio(pfolio_code, end_date)
-    pes_portfolio = portfolio_experiment_summary(tf, yield_shock, portfolio, currency, bond_index, bmark_index, yield_index)
-    this_df = mutate(pes_portfolio$portfolio_experiment_summary, start_date = start_date, end_date = end_date)
-    main_df = rbind(main_df, this_df)
-}
+## Get the portfolio snapshot at the time
+#portfolio = get_portfolio(pfolio_code, end_date)
+#pes_portfolio = portfolio_experiment_summary(tf, yield_shock, portfolio, currency, bond_index, bmark_index, yield_index)
+#main_df = mutate(pes_portfolio$portfolio_experiment_summary, start_date = start_date, end_date = end_date)
 
-# The above for-loop runs for 2+ minutes.  Save the outputs.
-csv_filename = paste( paste(".//csv//history_of_factor_shocks", pfolio_code, bmark_code, currency, sep = "-"), ".csv", sep = "")
-write.csv(main_df, csv_filename, row.names = FALSE)
+## Now repeat the experiment for every EOMonth over the last five years
+#for (i in 1:60) {
+    #cat("i = ", i, "\n")
+    #end_date = previous_business_date_if_weekend(EOMonth(end_date, -1))
+    #start_date = previous_business_date_if_weekend(EOMonth(end_date, -36))
+    #tf = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
+    #portfolio = get_portfolio(pfolio_code, end_date)
+    #pes_portfolio = portfolio_experiment_summary(tf, yield_shock, portfolio, currency, bond_index, bmark_index, yield_index)
+    #this_df = mutate(pes_portfolio$portfolio_experiment_summary, start_date = start_date, end_date = end_date)
+    #main_df = rbind(main_df, this_df)
+#}
+
+## The above for-loop runs for 2+ minutes.  Save the outputs.
+#csv_filename = paste( paste(".//csv//history_of_factor_shocks", pfolio_code, bmark_code, currency, sep = "-"), ".csv", sep = "")
+#write.csv(main_df, csv_filename, row.names = FALSE)
 
 #################################
 ## THE FOLLOWING ASSUMES THE CSV FILE HAS BEEN SAVED
+csv_filename = paste( paste(".//csv//history_of_factor_shocks", pfolio_code, bmark_code, currency, sep = "-"), ".csv", sep = "")
+
 df = read.csv(csv_filename)
 df$start_date = as_date(df$start_date)
 df$end_date = as_date(df$end_date)

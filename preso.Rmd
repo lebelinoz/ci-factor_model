@@ -1,7 +1,7 @@
 ---
 title: "Interest Rate Shock Model"
 author: "Alain LeBel"
-date: "16 February 2017"
+date: "20 February 2017"
 output: beamer_presentation
 ---
 
@@ -10,12 +10,13 @@ knitr::opts_chunk$set(echo = FALSE)
 source('main_GlobalReport.R', echo = FALSE)
 source('report_chart_PCGLUF_factor_model_results_over_time.R', echo = FALSE)
 source('bond_vs_bmark_ts.R', echo = FALSE)
+source('history_of_shock_forecasts.R', echo = FALSE)
 ```
 ## What is the _Interest Rate Shock Model_?
 <!-- Remember, you can render this in Visual Studio by going:
 	rmarkdown::render('preso.Rmd')
 at the command line.  In practice, these presos are easier to work on from RStudio. -->
-> "The fools are certain and the intelligent full of doubt." --- Bertrand Russell
+> "All models are wrong but some are useful" --- George Box
 
 Start with multi factor model with only two factors, being the benchmark equity index ($B$) and the bond index ($F$ for fixed income):
 $$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
@@ -43,7 +44,7 @@ show_regression(asset_bmark_yield_df, "bond", "yield")
 <!-- This chart should look good.  Point out that this is *not* the part of the model we should worry about. -->
 
 ## How yield affects benchmark returns
-> "All models are wrong but some are useful" --- George Box
+> "The fools are certain and the intelligent full of doubt." --- Bertrand Russell
 
 _Don't forget correlation:_  If the bond changes, then the benchmark will change, too:
 
@@ -52,7 +53,7 @@ show_regression(asset_bmark_yield_df, "bmark", "bond")
 ``` 
 <!-- This chart should look bad.  Say:  "This ought to ought to underline the imperfection in the models.  Note that the 'big boy' risk models are no better, drawing 'lines drawn clouds of dots' just like this." -->
 
-## Equities vs fixed income
+## Equities vs fixed income throughout history
 Disclaimer:  benchmarks and bonds now have low correlation _(remember:  correlation$^2 = R^2$)_ and are inversely related ($\beta < 0$)
 
 ```{r benchmark-bond relationships over time, echo=FALSE, fig.height=6}
@@ -67,7 +68,7 @@ ggplot(df_ts_experiment, aes(months, pfolio_return_rel_bmark, colour = frequency
 ```
 
 ## Now the results:
-I computed this model for each stock in the global portfolios (GLUF and Global Pensions).  Then I shock the 10Y U.S. Treasury Yield by +100 bps and calculate the estimated return of your portfolio based on latest weights in the database.  I find:
+I compute this model for each stock in the global portfolios (GLUF and Global Pensions).  Then I shock the 10Y U.S. Treasury Yield by +100 bps and calculate the estimated return of your portfolio based on latest weights in the database.  I find:
 
 - PCGLUF estimated return = `r paste(round(100 * df_portfolio_PCGLUF$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`.  
 
@@ -77,9 +78,20 @@ I computed this model for each stock in the global portfolios (GLUF and Global P
 
 Similarly, PCGPEN estimated return is `r paste(round(100 * df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`, or `r paste(round(100 * (df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGPEN$bmark_return_delta_shock),2), "%", sep = "")` relative the MSCI AC World Total Return Index.
 
+## Checks and biases as of Feb 2017
+I also computed the model for _every stock in the MSCI AC World_:
+
+* **Internal consistency:** Benchmark estimated shocked return is 3.80% when computed in this way.  Compare this with 3.75% shocked return we get from our simpler linear model.
+
+* **Currency bias:** When I restrict my by-stock calculations to US stocks, my total shocked return of the MSCI US stocks is 4.5%.
+
+* **Industry groups:** Banks (+11.4%), Diversified Financials (+9.1%), Energy (+7.1%), Insurance (+6.7%), Automobiles (+6.5%) and Semiconductors (+6.4%) are the industry groups with the highest shocked returns.  Lowest are Utilities (-4.0%), Real Estate (-2.5%), Food/Beverage/Tobacco (-0.4%) and Household/Personal Products (+0.5%)
+
 ## How the results changed through history
 
-TO DO:  Draw a chart of the benchmark and portfolio estimated shocks through history.
+```{r, echo = FALSE}
+ggplot(filtered_melted_df, aes(end_date, value, colour = variable)) + geom_line() + ggtitle(paste(pfolio_code, "How shock forecasts changed over time")) + theme(legend.position="bottom")
+```
 
 ## How does this compare to Barra?
 I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to October 2016).  I find:
