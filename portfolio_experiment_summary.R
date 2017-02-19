@@ -51,7 +51,7 @@ portfolio_experiment_summary = function(tf, yield_shock, portfolio, currency, bo
                                                 benchmark_delta_shock = shocked_bmark_return - unshocked_bmark_return,
                                                 delta_shock_relative_benchmark = delta_shock - benchmark_delta_shock)
 
-    stock_forecast_returns = select(stock_forecast_returns_with_details, ticker, delta_shock)
+    stock_forecast_returns = select(stock_forecast_returns_with_details, ticker, delta_shock, delta_shock_caused_by_bmark, delta_shock_caused_by_bond, benchmark_delta_shock, delta_shock_relative_benchmark)
 
     # Add the individual shocks back to the original portfolio:
     portfolio_with_shocks = merge(portfolio, stock_forecast_returns, by = "ticker", all.x = TRUE)
@@ -78,6 +78,6 @@ portfolio_experiment_summary = function(tf, yield_shock, portfolio, currency, bo
         , bmark_return_delta_shock = shocked_bmark_return - unshocked_bmark_return
     )
 
-    return_list <- list("portfolio_experiment_summary" = df, "stock_factor_models" = stock_forecast_returns_with_details, "bmark_factor.lm" = ufm$bmark_factor.lm)
+    return_list <- list("portfolio_experiment_summary" = df, "stock_factor_models" = stock_forecast_returns_with_details, "bmark_factor.lm" = ufm$bmark_factor.lm, "portfolio_with_shocks" = portfolio_with_shocks)
     return(return_list)
 }
