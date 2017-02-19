@@ -119,8 +119,8 @@ get_portfolio = function(portfolio_code, snapshot_date) {
 
 get_index_snapshot = function(bmark_code) {
     sql_bmark = paste(
-    "SELECT sec.sec_ticker, sec.sec_id, sec.sec_exchange, vs.value_subset, sec.sec_gics_code, gics.sector_name AS [sector], "
-    , " gics.ind_group_name AS[industry_group], msci.index_weight FROM dbo.t_Data_Index_L msci "
+    "SELECT sec.sec_ticker as [ticker], sec.sec_id, sec.sec_exchange, vs.value_subset, sec.sec_gics_code, gics.sector_name AS [sector], "
+    , " gics.ind_group_name AS[industry_group], msci.index_weight as [weight] FROM dbo.t_Data_Index_L msci "
     , "INNER JOIN dbo.t_Ref_Sec sec ON msci.sec_id = sec.sec_id "
     , "LEFT OUTER JOIN dbo.vValueSubsets vs ON sec.sec_id = vs.sec_id "
     , "LEFT OUTER JOIN dbo.t_Ref_GICS_Map gics ON sec.sec_gics_code = gics.sub_ind_code "

@@ -49,7 +49,14 @@ factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, fa
 
     for (ticker in colnames(stock_returns)) {
         asset_returns = stock_returns[, ticker]
-        asset_and_bmark_and_factors = data.frame(index(asset_returns), asset_returns[, 1], bmark_returns[, 1], factor_returns[, 1], row.names = NULL)
+        index(asset_returns) = as_date(index(asset_returns))
+
+        # Make sure all dates coincide:
+        this_bmark_returns = bmark_returns[which(index(bmark_returns) %in% index(asset_returns)),]
+        this_factor_returns = factor_returns[which(index(factor_returns) %in% index(asset_returns)),]
+        asset_returns = asset_returns[which(index(asset_returns) %in% index(bmark_returns)),]
+
+        asset_and_bmark_and_factors = data.frame(index(asset_returns), asset_returns[, 1], this_bmark_returns[, 1], this_factor_returns[, 1], row.names = NULL)
         colnames(asset_and_bmark_and_factors) = c("date", "asset", "bmark", "bond")
         all_stock_factor_models = rbind(all_stock_factor_models, single_experiment_summary(ticker, "junk", include_bmark = TRUE, include_bond = TRUE, lm_object = lm(asset ~ bmark + bond, data = asset_and_bmark_and_factors)))
         # cat("ticker =", ticker, "\n")
