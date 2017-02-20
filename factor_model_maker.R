@@ -1,4 +1,3 @@
-source('./preamble.R')
 source('./single_experiment_summary.R')
 
 # Create a universe_factor_model
