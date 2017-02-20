@@ -11,7 +11,7 @@ factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, fa
     drop_count = sum(sapply(stock_returns, function(x) sum(is.na(x)) > nrow(stock_returns) / 2))
     if (any(which(sapply(stock_returns, function(x) sum(is.na(x)) > nrow(stock_returns) / 2)))) {
         stock_returns = stock_returns[, - which(sapply(stock_returns, function(x) sum(is.na(x)) > nrow(stock_returns) / 2))]
-        if (drop_count > 0) warning(paste(drop_count, "stocks(s) were dropped from the analysis due to insufficient data:  less than 50% of returns were available"))
+        # if (drop_count > 0) warning(paste(drop_count, "stocks(s) were dropped from the analysis due to insufficient data:  less than 50% of returns were available"))
     }
 
 
@@ -66,6 +66,6 @@ factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, fa
     bmark_factor_df = setNames(data.frame(index(bmark_returns), bmark_returns[, 1], factor_returns[, 1]), c("date", "bmark", "factor"))
     bmark_factor.lm = lm(bmark ~ factor, bmark_factor_df)
 
-    return_list <- list("stock_factor_models" = all_stock_factor_models, "bmark_factor.lm" = bmark_factor.lm)
+    return_list <- list("stock_factor_models" = all_stock_factor_models, "bmark_factor.lm" = bmark_factor.lm, "bmark_factor_df" = bmark_factor_df, "bmark_returns" = bmark_returns, "factor_returns" = factor_returns, "stock_returns" = stock_returns)
     return(return_list)
 }

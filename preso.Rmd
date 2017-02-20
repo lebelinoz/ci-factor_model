@@ -115,4 +115,10 @@ The two main differences with a true risk model (by Northfield, Barra or UBS) ar
 	+ Oil prices
 	+ The usual quant signals (size, Value/Growth, etc)
 	+ Some economic signals (IP, Slope of the Term Structure, etc)
-  
+
+
+## Other shocks
+```{r, results='asis'}
+source('currency_shocks.R', echo=FALSE)
+pander::pander(df_formatted, split.cell = 15)
+```

@@ -104,7 +104,10 @@ get_portfolio = function(portfolio_code, snapshot_date) {
     if (missing(snapshot_date)) snapshot_date = today()
 
     sql_pfolio = paste(
-         "SELECT sec.sec_id, REPLACE(sec.sec_ticker,'.ASX','') AS [ticker], sec.sec_name as [name], pfolio.[weight] FROM PCI_REPORTING.dbo.t_data_historic_port_weights pfolio INNER JOIN PCI_CORE.dbo.t_Ref_Sec sec ON pfolio.sec_id = sec.sec_id WHERE pfolio.acct_cd = '"
+         "SELECT sec.sec_id, REPLACE(sec.sec_ticker,'.ASX','') AS [ticker], sec.sec_name as [name], pfolio.[weight], sec.sec_exchange, vs.value_subset, sec.sec_gics_code, gics.sector_name AS [sector], "
+        , " gics.ind_group_name AS[industry_group] FROM PCI_REPORTING.dbo.t_data_historic_port_weights pfolio INNER JOIN PCI_CORE.dbo.t_Ref_Sec sec ON pfolio.sec_id = sec.sec_id "
+        , "LEFT OUTER JOIN dbo.vValueSubsets vs ON sec.sec_id = vs.sec_id "
+        , "LEFT OUTER JOIN dbo.t_Ref_GICS_Map gics ON sec.sec_gics_code = gics.sub_ind_code ", "WHERE pfolio.acct_cd = '"
         , portfolio_code
         , "' AND pfolio.metric_date IN (SELECT MAX(metric_date) FROM PCI_REPORTING.dbo.t_data_historic_port_weights WHERE acct_cd = '"
         , portfolio_code
