@@ -7,7 +7,7 @@ source('./show_regression.R')
 source('./get_benchmark_index.R')
 source('./get_bond_index.R')
 source('./get_yield_index.R')
-library(reshape2)
+#library(reshape2)
 
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"
@@ -61,4 +61,16 @@ for (ig in 2:length(industry_groups)) {
 # Interestingly, if we breakdown the MSCI AC World by Industry Group, the 'portfolio_experiment_summary' works, and 
 # 'main_df' above gives use a breakdown of each Industry Group's estimated shock.  The sum of the answers comes very close to 
 # the simple benchmark shock estimate:  as of end of January 2017, I get 3.80% for the MSCI AC World computed for each stock,
-# and 3.75% for the benchmark
+# and 3.75% for the benchmark.
+shocked_return_computed_by_stock = sum(main_df$pfolio_return_delta_shock_unadjusted_by_weighted)
+
+# We can also do things like summarise by industry group
+ind_group_summary <- main_df %>% group_by(this_ig) %>%
+    summarise(contrib_to_index_shock = sum(pfolio_return_delta_shock_unadjusted_by_weighted), index_shock = sum(pfolio_return_delta_shock_unadjusted_by_weighted) / sum(pfolio_noncash_weight))
+arrange(ind_group_summary, index_shock)
+arrange(ind_group_summary, desc(index_shock))
+
+# It would be straightforward to repeat the above by value subset, GICS Sector, region, etc.
+# BUT be careful when dealing with partitions of MSCI AC World which are too big.  It's better to break into smaller parts 
+# (say, by country + value subset), then combine the results using group_by's:  remember that the model is linear, so taking
+# the sum of the shocks on smaller parts is the same as computing the shock on the whole.
