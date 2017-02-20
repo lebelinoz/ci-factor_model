@@ -79,6 +79,7 @@ I compute this model for each stock in the global portfolios (GLUF and Global Pe
 Similarly, PCGPEN estimated return is `r paste(round(100 * df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`, or `r paste(round(100 * (df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGPEN$bmark_return_delta_shock),2), "%", sep = "")` relative the MSCI AC World Total Return Index.
 
 ## Checks and biases as of Feb 2017
+<!-- “Beware of bugs in the above code; I have only proved it correct, not tried it.” --- Donald Knuth -->
 I also computed the model for _every stock in the MSCI AC World_:
 
 * **Internal consistency:** Benchmark estimated shocked return is 3.80% when computed in this way.  Compare this with 3.75% shocked return we get from our simpler linear model.

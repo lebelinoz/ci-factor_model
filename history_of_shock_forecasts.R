@@ -15,8 +15,8 @@ pfolio_code = "PCGLUF"
 currency = "AUD"
 yield_shock = 1
 
-##########################
-## HARD PART:  Only run this once, and it saves to a csv file
+###########################
+### HARD PART:  Only run this once, and it saves to a csv file
 
 ## The factors:
 #bmark_index = get_benchmark_index(bmark_code, currency)
@@ -34,8 +34,8 @@ yield_shock = 1
 #pes_portfolio = portfolio_experiment_summary(tf, yield_shock, portfolio, currency, bond_index, bmark_index, yield_index)
 #main_df = mutate(pes_portfolio$portfolio_experiment_summary, start_date = start_date, end_date = end_date)
 
-## Now repeat the experiment for every EOMonth over the last five years
-#for (i in 1:60) {
+## Now repeat the experiment for every EOMonth over the last five years (actually, I tried 10 years and it conked out on month 97)
+#for (i in 1:120) {
     #cat("i = ", i, "\n")
     #end_date = previous_business_date_if_weekend(EOMonth(end_date, -1))
     #start_date = previous_business_date_if_weekend(EOMonth(end_date, -36))
@@ -46,7 +46,7 @@ yield_shock = 1
     #main_df = rbind(main_df, this_df)
 #}
 
-## The above for-loop runs for 2+ minutes.  Save the outputs.
+### The above for-loop runs for 2+ minutes.  Save the outputs.
 #csv_filename = paste( paste(".//csv//history_of_factor_shocks", pfolio_code, bmark_code, currency, sep = "-"), ".csv", sep = "")
 #write.csv(main_df, csv_filename, row.names = FALSE)
 
