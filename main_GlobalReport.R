@@ -11,7 +11,7 @@ source('./get_yield_index.R')
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"
 watchlist_name = 'Global'
-currency = "AUD"
+currency = "AUD" # Changing this to USD or Local doesn't change very much for PCGLUF...  Relative underperformance is still roughly same.
 
 ######################
 ## BENCHMARK, BOND & YIELD:
