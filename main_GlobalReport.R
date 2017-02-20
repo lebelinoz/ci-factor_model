@@ -1,12 +1,9 @@
 #######################
 ## PREAMBLE:
 ##  WARNING! The first few steps must be run in chunks for some reason (?).  Once you have a bmark_index, everything else ought to run smoothly.
+source('./preamble.R')
 source('./factor_model_maker.R')
 source('./portfolio_experiment_summary.R')
-source('./show_regression.R')
-source('./get_benchmark_index.R')
-source('./get_bond_index.R')
-source('./get_yield_index.R')
 
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"
@@ -119,6 +116,11 @@ asset_returns = stock_returns[, ticker]
 index(asset_returns) = as_date(index(asset_returns))
 
 # Make sure all dates coincide:
+bond_returns = bond_returns[which(index(bond_returns) %in% index(yield_returns)),]
+bmark_returns = bmark_returns[which(index(bmark_returns) %in% index(bond_returns)),]
+bond_returns = bond_returns[which(index(bond_returns) %in% index(bmark_returns)),]
+bmark_returns = bmark_returns[which(index(bmark_returns) %in% index(yield_returns)),]
+yield_returns = yield_returns[which(index(yield_returns) %in% index(asset_returns)),]
 bmark_returns = bmark_returns[which(index(bmark_returns) %in% index(asset_returns)),]
 bond_returns = bond_returns[which(index(bond_returns) %in% index(asset_returns)),]
 yield_returns = yield_returns[which(index(yield_returns) %in% index(asset_returns)),]

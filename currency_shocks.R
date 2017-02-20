@@ -1,12 +1,9 @@
 #######################
 ## PREAMBLE:
 ##  WARNING! The source + library parts must be run separately for some reason (?).
+source('./preamble.R')
 source('./factor_model_maker.R')
 source('./portfolio_experiment_summary.R')
-source('./show_regression.R')
-source('./get_benchmark_index.R')
-source('./get_currency_index.R')
-source('./get_fx_cross.R')
 
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"

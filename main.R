@@ -1,9 +1,10 @@
 #######################
 ## PREAMBLE:
 ##  WARNING! The first few steps must be run in chunks for some reason (?).  Once you have a bmark_index, everything else ought to run smoothly.
+source('./preamble.R')
 source('./factor_model_maker.R')
 source('./portfolio_experiment_summary.R')
-source('./show_regression.R')
+
 
 # Raw Parameters for all experiment
 bmark_code = "MSCIWORLDG"

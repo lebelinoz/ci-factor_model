@@ -1,11 +1,16 @@
-source('./class/stock.returns.R')
+source('./preamble.R')
 source('./single_experiment_summary.R')
 
 # Create a universe_factor_model
-factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, factor_index, factor_return_type = 'arithmetic') {
+factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, factor_index, factor_return_type = 'arithmetic', stock_returns) {
 
-    # Step 1:  translate the first five parameters (timeframe, benchmark_code, portfolio_code and sec_id_list) into an xts structure of returns.
-    stock_returns = stock.returns(tf, sec_id_list = sec_id_list, currency = currency)@xts_returns
+    # Step 1:  if stock_returns has not been supplied, translate the first five parameters (timeframe, benchmark_code, portfolio_code and sec_id_list) into an xts structure of returns.
+    if (missing(stock_returns)) {
+        if (missing(currency) | missing(sec_id_list)) stop("if stock_returns is not supplied, currency and sec_id_list must be supplied")        
+        stock_returns = stock.returns(tf, sec_id_list = sec_id_list, currency = currency)@xts_returns
+    }
+    # if (!is(stock_returns, "stock.returns")) stop("if stock_returns is supplied, it must be of class stock.returns")
+
 
     # (drop all columns from the xts structure) which don't have 50% data)
     drop_count = sum(sapply(stock_returns, function(x) sum(is.na(x)) > nrow(stock_returns) / 2))
@@ -21,6 +26,10 @@ factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, fa
     
     all_factor_returns = periodReturn(factor_index, period = get_frequency(tf, long.form = TRUE), type = factor_return_type)
     factor_returns = all_factor_returns[paste(get_start_date(tf), get_end_date(tf), sep = "/")]
+
+    # Drop any dates which might be in one but not the other:
+    bmark_returns = bmark_returns[which(index(bmark_returns) %in% index(factor_returns)),]
+    factor_returns = factor_returns[which(index(factor_returns) %in% index(bmark_returns)),]
 
 
     # Step 3:  for each stock, compute its factor model.

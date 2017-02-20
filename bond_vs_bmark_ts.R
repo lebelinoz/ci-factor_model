@@ -1,7 +1,4 @@
-source('./lib/Sql_Wrapper.R')
-source('./get_benchmark_index.R')
-source('./get_bond_index.R')
-source('./get_yield_index.R')
+source('./preamble.R')
 
 bmark_code = "MSCIWORLDG"
 sp500_code = "SP500"
