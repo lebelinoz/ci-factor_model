@@ -16,7 +16,7 @@ source('history_of_shock_forecasts.R', echo = FALSE)
 <!-- Remember, you can render this in Visual Studio by going:
 	rmarkdown::render('preso.Rmd')
 at the command line.  In practice, these presos are easier to work on from RStudio. -->
-> "All models are wrong but some are useful" --- George Box
+> "All models are wrong but some are useful" --- George Box (English statistician)
 
 Start with multi factor model with only two factors, being the benchmark equity index ($B$) and the bond index ($F$ for fixed income):
 $$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$

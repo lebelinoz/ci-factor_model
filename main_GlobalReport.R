@@ -47,8 +47,9 @@ watchlist = get_watchlist(watchlist_name)
 ## TIMEFRAME
 # For now, let's use 3-year weekly timeframe ending at the end of the latest month.
 freq = "W"
-start_date = previous_business_date_if_weekend(EOMonth(today(), -37))
-end_date = previous_business_date_if_weekend(EOMonth(today(), -1))
+#start_date = previous_business_date_if_weekend(EOMonth(today(), -37))
+end_date =  previous_business_date_if_weekend(today()-1) #  previous_business_date_if_weekend(EOMonth(today(), -1))
+start_date = previous_business_date_if_weekend(end_date - 365*3)
 tf1 = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
 
 # The portfolio experiment summary gives us the benchmark and portfolio shocked returns:
@@ -114,7 +115,16 @@ yield_returns = periodReturn(yield_index, period = get_frequency(tf1, long.form 
 stock_returns = stock.returns(tf1, sec_id_list = portfolio_PCGLUF$sec_id)@xts_returns
 
 ticker = "AON.US"
-asset_bmark_yield_df = data.frame(date = index(bmark_returns), asset = stock_returns[, ticker], bmark = bmark_returns[, 1], bond = bond_returns[, 1], yield = yield_returns[, 1])
+asset_returns = stock_returns[, ticker]
+index(asset_returns) = as_date(index(asset_returns))
+
+# Make sure all dates coincide:
+bmark_returns = bmark_returns[which(index(bmark_returns) %in% index(asset_returns)),]
+bond_returns = bond_returns[which(index(bond_returns) %in% index(asset_returns)),]
+yield_returns = yield_returns[which(index(yield_returns) %in% index(asset_returns)),]
+asset_returns = asset_returns[which(index(asset_returns) %in% index(bmark_returns)),]
+
+asset_bmark_yield_df = data.frame(date = index(bmark_returns), asset = asset_returns, bmark = bmark_returns[, 1], bond = bond_returns[, 1], yield = yield_returns[, 1])
 rownames(asset_bmark_yield_df) = NULL
 colnames(asset_bmark_yield_df) = c("date", ticker, "bmark", "bond", "yield")
 
