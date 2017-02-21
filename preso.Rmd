@@ -1,5 +1,6 @@
 ---
-title: "Interest Rate Shock Model"
+title: "cree:  the CI Risk Engine"
+subtitle: "Interest Rate Shock Model and other shock models"
 author: "Alain LeBel"
 date: "21 February 2017"
 output: beamer_presentation
@@ -44,8 +45,6 @@ show_regression(asset_bmark_yield_df, "bond", "yield")
 <!-- This chart should look good.  Point out that this is *not* the part of the model we should worry about. -->
 
 ## How yield affects benchmark returns
-> "The fools are certain and the intelligent full of doubt." --- Bertrand Russell
-
 _Don't forget correlation:_  If the bond changes, then the benchmark will change, too:
 
 ```{r benchmark-bond regression, echo=FALSE, fig.height=5}
@@ -79,6 +78,8 @@ I compute this model for each stock in the global portfolios (GLUF and Global Pe
 Similarly, PCGPEN estimated return is `r paste(round(100 * df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`, or `r paste(round(100 * (df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGPEN$bmark_return_delta_shock),2), "%", sep = "")` relative the MSCI AC World Total Return Index.
 
 ## Checks and biases as of 19 Feb 2017
+> "The fools are certain and the intelligent full of doubt." --- Bertrand Russell
+
 I also computed the model for _every stock in the MSCI AC World_:
 
 * **Internal consistency:** Benchmark estimated shocked return is 3.80% when computed in this way.  Compare this with 3.75% shocked return I got from our simpler linear model.
@@ -92,6 +93,20 @@ I also computed the model for _every stock in the MSCI AC World_:
 ```{r, echo = FALSE}
 ggplot(filtered_melted_df, aes(end_date, value, colour = variable)) + geom_line() + ggtitle(paste(pfolio_code, "How shock forecasts changed over time")) + theme(legend.position="bottom")
 ```
+
+## Other shock models
+Similar to the _Interest Rate Factor Model_, I wrote other 2-factor models of the form
+$$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
+where $B$ is the benchmark equity index and the $F$ is another factor.  I've tried changes in _Brent Oil_, various currencies and a USD currency basket index (ticker _DXY-IFUS_ in FactSet).
+
+***Results are on the next page, but are better viewed in Excel***
+
+## Other shock models' results
+```{r, results='asis'}
+source('currency_shocks.R', echo=FALSE)
+pander::pander(df_formatted, split.cell = 15)
+```
+(there is a nicer version of this in Excel)
 
 ## How does this compare to Barra?
 ![I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to October 2016)](./img/vs_Barra.png)
@@ -114,19 +129,3 @@ The two main differences with a true risk model (by Northfield, Barra or UBS) ar
 	+ Oil prices
 	+ The usual quant signals (size, Value/Growth, etc)
 	+ Some economic signals (IP, Slope of the Term Structure, etc)
-
-
-## Other shocks
-Similar to the _Interest Rate Factor Model_, I wrote other 2-factor models of the form
-$$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
-where $B$ is the benchmark equity index and the $F$ is another factor.  I've tried changes in _Brent Oil_, various currencies and the all US Dollar basket index (ticker _DXY-IFUS_ in FactSet).
-
-***Results are on the next page, but are better viewed in Excel***
-
-## Other shocks' results
-```{r, results='asis'}
-source('currency_shocks.R', echo=FALSE)
-pander::pander(df_formatted, split.cell = 15)
-```
-(there is a nicer version of this in Excel)
-
