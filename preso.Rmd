@@ -1,7 +1,7 @@
 ---
 title: "Interest Rate Shock Model"
 author: "Alain LeBel"
-date: "20 February 2017"
+date: "21 February 2017"
 output: beamer_presentation
 ---
 
@@ -18,10 +18,10 @@ source('history_of_shock_forecasts.R', echo = FALSE)
 at the command line.  In practice, these presos are easier to work on from RStudio. -->
 > "All models are wrong but some are useful" --- George Box (English statistician)
 
-Start with multi factor model with only two factors, being the benchmark equity index ($B$) and the bond index ($F$ for fixed income):
+Start with a multi factor model with only two factors, being the benchmark equity index ($B$) and the bond index ($F$ for fixed income):
 $$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
 <!-- (The $\theta_t$ is a residual term which we assume will always average out to zero.  The $\alpha$ ought to be very close to zero.)  --> 
-For every stock, I run a **multilinear regression** using three years of weekly historic data to determine the values of $\alpha$ and the two $\beta$'s. The result is a simple linear model: plug in returns of the two factors to get an estimated return of the stock. 
+For every stock, I run a **multilinear regression** using three years of weekly historic data to determine the values of $\alpha$, $\beta_B$ and $\beta_F$. The result is a simple linear model: plug in returns of the two factors to get an estimated return of the stock. 
 
 To build a complete _Interest Rate Shock Model_, we use simpler 1-factor models to estimate how yield changes affect the benchmark and bond returns, then plug those estimates into the above equation.
 
@@ -78,15 +78,14 @@ I compute this model for each stock in the global portfolios (GLUF and Global Pe
 
 Similarly, PCGPEN estimated return is `r paste(round(100 * df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`, or `r paste(round(100 * (df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGPEN$bmark_return_delta_shock),2), "%", sep = "")` relative the MSCI AC World Total Return Index.
 
-## Checks and biases as of Feb 2017
-<!-- “Beware of bugs in the above code; I have only proved it correct, not tried it.” --- Donald Knuth -->
+## Checks and biases as of 19 Feb 2017
 I also computed the model for _every stock in the MSCI AC World_:
 
-* **Internal consistency:** Benchmark estimated shocked return is 3.80% when computed in this way.  Compare this with 3.75% shocked return we get from our simpler linear model.
+* **Internal consistency:** Benchmark estimated shocked return is 3.80% when computed in this way.  Compare this with 3.75% shocked return I got from our simpler linear model.
 
 * **Currency bias:** When I restrict my by-stock calculations to US stocks, my total shocked return of the MSCI US stocks is 4.5%.
 
-* **Industry groups:** Banks (+11.4%), Diversified Financials (+9.1%), Energy (+7.1%), Insurance (+6.7%), Automobiles (+6.5%) and Semiconductors (+6.4%) are the industry groups with the highest shocked returns.  Lowest are Utilities (-4.0%), Real Estate (-2.5%), Food/Beverage/Tobacco (-0.4%) and Household/Personal Products (+0.5%)
+* **Industry groups:** Banks (+11.4%), Diversified Financials (+9.1%), Energy (+7.1%), Insurance (+6.7%), Automobiles (+6.5%) and Semiconductors (+6.4%) are the MSCI industry groups with the highest shocked returns.  Lowest are Utilities (-4.0%), Real Estate (-2.5%), Food/Beverage/Tobacco (-0.4%) and Household/Personal Products (+0.5%)
 
 ## How the results changed through history
 
@@ -95,13 +94,13 @@ ggplot(filtered_melted_df, aes(end_date, value, colour = variable)) + geom_line(
 ```
 
 ## How does this compare to Barra?
-I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to October 2016).  I find:
+![I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to October 2016)](./img/vs_Barra.png)
 
+<!--.  I find:
 * PCGLUF estimated return is +3.0%, while Barra computed +6.4%
-
 * the benchmark estimated returns +4.2%, while Barra computed +8.0%
-
 * My model says -1.2% underperformance, while Barra say -1.6%
+-->
 
 ## Why so different from other risk models?
 The two main differences with a true risk model (by Northfield, Barra or UBS) are:
@@ -118,7 +117,16 @@ The two main differences with a true risk model (by Northfield, Barra or UBS) ar
 
 
 ## Other shocks
+Similar to the _Interest Rate Factor Model_, I wrote other 2-factor models of the form
+$$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
+where $B$ is the benchmark equity index and the $F$ is another factor.  I've tried changes in _Brent Oil_, various currencies and the all US Dollar basket index (ticker _DXY-IFUS_ in FactSet).
+
+***Results are on the next page, but are better viewed in Excel***
+
+## Other shocks' results
 ```{r, results='asis'}
 source('currency_shocks.R', echo=FALSE)
 pander::pander(df_formatted, split.cell = 15)
 ```
+(there is a nicer version of this in Excel)
+

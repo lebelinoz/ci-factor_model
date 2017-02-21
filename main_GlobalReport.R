@@ -2,7 +2,6 @@
 ## PREAMBLE:
 ##  WARNING! The first few steps must be run in chunks for some reason (?).  Once you have a bmark_index, everything else ought to run smoothly.
 source('./preamble.R')
-source('./factor_model_maker.R')
 source('./portfolio_experiment_summary.R')
 
 # Raw Parameters for all experiment
@@ -37,7 +36,7 @@ yield_shock = 1
 ## PORTFOLIOS AND WATCHLIST:
 portfolio_PCGLUF = get_portfolio("PCGLUF")
 portfolio_PCGPEN = get_portfolio("PCGPEN")
-watchlist = get_watchlist(watchlist_name)
+# watchlist = get_watchlist(watchlist_name)
 
 
 #####################
@@ -58,9 +57,9 @@ pes_portfolio_PCGPEN = portfolio_experiment_summary(tf1, yield_shock, portfolio_
 df_portfolio_PCGPEN = pes_portfolio_PCGPEN$portfolio_experiment_summary
 stock_summary_pfolio_PCGPEN = pes_portfolio_PCGPEN$stock_factor_models
 
-pes_watchlist = portfolio_experiment_summary(tf1, yield_shock, watchlist, currency, bond_index, bmark_index, yield_index)
-df_watchlist = pes_watchlist$portfolio_experiment_summary
-stock_summary_watchlist = pes_watchlist$stock_factor_models
+# pes_watchlist = portfolio_experiment_summary(tf1, yield_shock, watchlist, currency, bond_index, bmark_index, yield_index)
+# df_watchlist = pes_watchlist$portfolio_experiment_summary
+# stock_summary_watchlist = pes_watchlist$stock_factor_models
 
 ## Let's look at the history of portfolio and watchlist shocks:
 #for (i in 1:60) {
