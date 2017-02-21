@@ -17,11 +17,13 @@ get_shock_results = function(tf, portfolio, bmark_index, factor_index, factor_re
         delta_shock = delta_shock_from_bmark + delta_shock_factor_return)
 
     # Makes it look nicer when printed to the screen
-    stock_shocks = as_tibble(stock_shocks)
+    # (actually, do not use tibbles or else you'll get warnings persisting forever after)
+    # stock_shocks = as_tibble(stock_shocks)
 
     if (missing(shock_name)) {
         v = list("shocked_portfolio" = stock_shocks, "shocked_bmark_return" = delta_shock_bmark_return, "bmark_beta_rel_factor" = bmark_beta_rel_factor)
     } else {
+        cat(shock_name, "\n")
         stock_shocks = mutate(stock_shocks, shock_name = shock_name)
         v = list("shocked_portfolio" = stock_shocks, "shocked_bmark_return" = delta_shock_bmark_return, "bmark_beta_rel_factor" = bmark_beta_rel_factor, "shock_name" = shock_name)
     }

@@ -117,6 +117,13 @@ get_portfolio = function(portfolio_code, snapshot_date) {
         , sep = "")
     portfolio = get_table_from_sql_CISMPRDSVR(sql_pfolio)
 
+    portfolio$ticker = as.character(portfolio$ticker)
+    portfolio$name = as.character(portfolio$name)
+    portfolio$value_subset = as.character(portfolio$value_subset)
+    portfolio$sec_exchange = as.character(portfolio$sec_exchange)
+    portfolio$industry_group = as.character(portfolio$industry_group)
+    portfolio$sector = as.character(portfolio$sector)
+
     return(portfolio)
 }
 
