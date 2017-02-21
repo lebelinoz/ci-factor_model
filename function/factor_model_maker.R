@@ -1,6 +1,9 @@
-source('./single_experiment_summary.R')
-
-# Create a universe_factor_model
+# Create a universe_factor_model.
+# This will actually return a list with the following:  
+#  * stock_factor_models:  a dataframe which will include tickers, intercepts and betas
+#  * bmark_factor.lm:  the linear model which encodes the relationship between benchmark and factor
+#  * bmark_factor_df:  the returns of the benchmar and factor, in a dataframe for easy ggplot2 graphs
+#  * bmark_returns, factor_returns, stock_returns:  xts objects used in the calculations
 factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, factor_index, factor_return_type = 'arithmetic', stock_returns) {
 
     # Step 1:  if stock_returns has not been supplied, translate the first five parameters (timeframe, benchmark_code, portfolio_code and sec_id_list) into an xts structure of returns.
@@ -8,8 +11,6 @@ factor_model_maker = function(tf, sec_id_list, currency = "AUD", bmark_index, fa
         if (missing(currency) | missing(sec_id_list)) stop("if stock_returns is not supplied, currency and sec_id_list must be supplied")        
         stock_returns = stock.returns(tf, sec_id_list = sec_id_list, currency = currency)@xts_returns
     }
-    # if (!is(stock_returns, "stock.returns")) stop("if stock_returns is supplied, it must be of class stock.returns")
-
 
     # (drop all columns from the xts structure) which don't have 50% data)
     drop_count = sum(sapply(stock_returns, function(x) sum(is.na(x)) > nrow(stock_returns) / 2))
