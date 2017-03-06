@@ -55,7 +55,7 @@ try_this_lambda = function(all_factor1_returns, all_factor2_returns, factor_name
     # print(ggplot(df, aes(x = date, y = value, colour = metric)) + geom_line() + facet_wrap("version", ncol = 1, scales = "free") + theme(legend.position = "bottom") + ggtitle(paste("lambda =", lambda)))
 }
 
-bmark_code = "MSCIWORLDG"
+bmark_code = "SP500"
 currency = "AUD"
 frequency = "weekly"
 
@@ -68,18 +68,29 @@ all_bmark_index_returns = periodReturn(bmark_index, period = frequency)
 all_bond_index_returns = periodReturn(bond_index, period = frequency)
 all_yield_index_returns = periodReturn(yield_index, period = frequency, type = 'log')
 
-
+###################
+## BOND vs YIELD ##
+###################
 df = try_this_lambda(all_bond_index_returns, all_yield_index_returns, "bond vs yield")
 df = rbind(df, try_this_lambda(all_bond_index_returns, all_yield_index_returns, "bond vs yield", 0.90))
 df = rbind(df, try_this_lambda(all_bond_index_returns, all_yield_index_returns, "bond vs yield", 0.92))
 df = rbind(df, try_this_lambda(all_bond_index_returns, all_yield_index_returns, "bond vs yield", 0.94))
 df = rbind(df, try_this_lambda(all_bond_index_returns, all_yield_index_returns, "bond vs yield", 0.96))
 df = rbind(df, try_this_lambda(all_bond_index_returns, all_yield_index_returns, "bond vs yield", 0.98))
-ggplot(df, aes(x = date, y = value, colour = metric)) + geom_line() + facet_wrap("version", ncol = 1, scales = "free") + theme(legend.position = "bottom")
+ggplot(df, aes(x = date, y = value, colour = metric)) + geom_line() + facet_wrap("version", ncol = 1, scales = "free") + theme(legend.position = "bottom") + ggtitle("bond vs yield", subtitle = "Exponentially Weighted Moving Average (ewma)")
 
-
+###################
+## BMARK vs BOND ##
+###################
 df1 = try_this_lambda(all_bmark_index_returns, all_bond_index_returns, "bmark vs bond")
 df1 = rbind(df1, try_this_lambda(all_bmark_index_returns, all_bond_index_returns, "bmark vs bond", 0.90))
+df1 = rbind(df1, try_this_lambda(all_bmark_index_returns, all_bond_index_returns, "bmark vs bond", 0.92))
 df1 = rbind(df1, try_this_lambda(all_bmark_index_returns, all_bond_index_returns, "bmark vs bond", 0.94))
+df1 = rbind(df1, try_this_lambda(all_bmark_index_returns, all_bond_index_returns, "bmark vs bond", 0.96))
 df1 = rbind(df1, try_this_lambda(all_bmark_index_returns, all_bond_index_returns, "bmark vs bond", 0.98))
-ggplot(df1, aes(x = date, y = value, colour = metric)) + geom_line() + facet_wrap("version", ncol = 1, scales = "free") + theme(legend.position = "bottom")
+
+# Chart the different lambdas (vs no ewma):
+ggplot(df1, aes(x = date, y = value, colour = metric)) + geom_line() + facet_wrap("version", ncol = 1, scales = "free") + theme(legend.position = "bottom") + ggtitle(paste(bmark_code, "vs bond"), subtitle = "Exponentially Weighted Moving Average (ewma)")
+
+# Chart just lambda = 0.94 vs no ewma:
+df1 %>% filter(metric %in% c("regular", "lambda=0.94", "lambda=0.94")) %>% ggplot(aes(x = date, y = value, colour = metric)) + geom_line() + facet_wrap("version", ncol = 1, scales = "free") + theme(legend.position = "bottom") + ggtitle(paste(bmark_code, "vs bond"), subtitle = "Exponentially Weighted Moving Average (ewma)")
