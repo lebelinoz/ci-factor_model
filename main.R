@@ -7,10 +7,10 @@ pfolio_code = "PCGLUF"
 watchlist_name = 'Global'
 currency = "AUD"
 
-# Use 3-year weekly timeframe ending at the end of the latest month.
+# Use 3-year weekly (=3 * 52 = 156 weeks) timeframe ending at the end of the latest week.
 freq = "W"
-end_date = previous_business_date_if_weekend(EOMonth(today(), -1)) # previous_business_date_if_weekend(ymd("2016-10-31")) # previous_business_date_if_weekend(EOMonth(today(), -1)) # 
-start_date = previous_business_date_if_weekend(EOMonth(end_date, -36))
+end_date = EOWeek(today(), -1) # previous_business_date_if_weekend(EOMonth(today(), -1)) # previous_business_date_if_weekend(ymd("2016-10-31")) # previous_business_date_if_weekend(EOMonth(today(), -1)) # 
+start_date = EOWeek(end_date, 1 - 3 * 52) # previous_business_date_if_weekend(EOMonth(end_date, -36))
 tf = timeframe(start_date = start_date, end_date = end_date, frequency = freq)
 
 # The benchmark factor, bond, yield and portfolio

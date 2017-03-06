@@ -139,9 +139,24 @@ EOMonth = function(d, step, last_business_date = FALSE) {
     }
 }
 
-## Test:
-#sat = ymd("2017-02-04")
-#sun = ymd("2017-02-05")
-#wkd = c(sat, sun)
-#friday_once = previous_business_date_if_weekend(sat)
-#friday_twice = previous_business_date_if_weekend(wkd)
+EOWeek = function(d, step = 0) {
+    if (step == 0) {
+        if (length(d) == 1) {
+            while (weekdays(d) != "Friday") {
+                d = d + 1            
+            }
+        } else {
+            d = lapply(d, EOWeek)
+        }
+        return(d)
+    } else {
+        return(EOWeek(d + 7 * step, 0))
+    }
+}
+
+### Test:
+## library(lubridate)
+#EOWeek(today())
+#EOWeek(today(), -1)
+#EOWeek(today(), -3 * 52)
+#EOWeek(today(), -1 -3 * 52)
