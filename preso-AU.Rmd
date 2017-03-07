@@ -1,23 +1,24 @@
 ---
 title: "cree:  the CI Risk Engine"
-subtitle: "Interest Rate Shock Model and other shock models"
+subtitle: "Interest Rate Shock Model and other shock models (AU)"
 author: "Alain LeBel"
-date: "21 February 2017"
+date: "8 March 2017"
 output: beamer_presentation
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-source('main_GlobalReport.R', echo = FALSE)
-source('report_chart_PCGLUF_factor_model_results_over_time.R', echo = FALSE)
-source('bond_vs_bmark_ts.R', echo = FALSE)
-source('history_of_shock_forecasts.R', echo = FALSE)
+source('main_AU.R', echo = FALSE)
+source('report_chart_PCHEST_factor_model_results_over_time.R', echo = FALSE)
+source('bond_vs_bmark_ts_au.R', echo = FALSE)
+source('history_of_shock_forecasts_au.R', echo = FALSE)
 ```
 ## What is the _Interest Rate Shock Model_?
 <!-- Remember, you can render this in Visual Studio by going:
 	rmarkdown::render('preso.Rmd')
 at the command line.  In practice, these presos are easier to work on from RStudio, which has more point-and-click features for "knitting"" and compiling single blocks. -->
-> "All models are wrong but some are useful" --- George Box (English statistician)
+> "All models are wrong but some are useful" 
+> --- George Box (English statistician)
 
 Start with a multi factor model with only two factors, being the benchmark equity index ($B$) and the bond index ($F$ for fixed income):
 $$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
@@ -26,21 +27,21 @@ For every stock, I run a **multilinear regression** using three years of weekly 
 
 To build a complete _Interest Rate Shock Model_, we use simpler 1-factor models to estimate how yield changes affect the benchmark and bond returns, then plug those estimates into the above equation.
 
-## The factors and the shock parameter
-For the benchmark, use the _MSCI AC World_ total return index.
+## The factors and the shock parameter for AU
+For the benchmark, use the _S&P/ASX 200_ total return index.
 
-For the yield, use the _U.S. 10y Treasury Yield_.  When I shock the yield (by increasing it by 100 bp), I actually compute the log return of the latest yield:
+For the yield, use the yield to maturity of _Australia Benchmark Bond - 10 Year_ (FactSet ticker _TRYAU10Y-FDS_).  When I shock the yield (by increasing it by 100 bp), I actually compute the log return of the latest yield:
 $$log(`r round(1 + yield_index[nrow(yield_index),1], 2)`\%) - log(`r round(yield_index[nrow(yield_index),1], 2)`\%) =
 `r round(log(1 + yield_index[nrow(yield_index),1]) - log(yield_index[nrow(yield_index),1]), 4)`$$
 is the "return of the yield" shock.  I use this to estimate the shocked returns of the benchmark and bond index.
 
-For the bond, use _Citigroup US Broad Investment-Grade Treasury Bond Index_.  It measures "the total rate of return performance for bond markets with a remaining maturity of at least one year" and is "composed of US Treasuries excluding Federal Reserve purchases, inflation-indexed securities and STRIPS" _(?)_.  Northfield tends to use Citigroup fixed-income indices, and for this yield I find the correlation to be very good (see next page).
+For the bond, use the total return of the _Citigroup Australian Broad Investment-Grade Bond Index_. Northfield tends to use Citigroup fixed-income indices, and for this yield I find the correlation to be very good (see next page).
 
 ## How yield affects bond index returns
-_Returns of the yield_ are highly correlated to bonds:  saying "The (return of the) yield is $+x\%$" is almost the same as saying "The bond index goes down $`r round(lm(bond ~ yield, asset_bmark_yield_df )$coefficients[2], 3)[1]`x\%$":
+_Returns of the yield_ are highly correlated to bonds:
 
 ```{r bond-yield regression, echo=FALSE, fig.height=5}
-show_regression(asset_bmark_yield_df, "bond", "yield")
+show_regression_between_xts(periodReturn(bond_index, period = freq_long_form), periodReturn(yield_index, period = freq_long_form, type = 'log'), "bond", "yield")
 ```
 <!-- This chart should look good.  Point out that this is *not* the part of the model we should worry about. -->
 
@@ -48,7 +49,7 @@ show_regression(asset_bmark_yield_df, "bond", "yield")
 _Don't forget correlation:_  If the bond changes, then the benchmark will change, too:
 
 ```{r benchmark-bond regression, echo=FALSE, fig.height=5}
-show_regression(asset_bmark_yield_df, "bmark", "bond")
+show_regression_between_xts(periodReturn(bmark_index, period = freq_long_form), periodReturn(bond_index, period = freq_long_form), "bmark", "bond")
 ``` 
 <!-- This chart should look bad.  Say:  "This ought to ought to underline the imperfection in the models.  Note that the 'big boy' risk models are no better, drawing 'lines drawn clouds of dots' just like this." -->
 
@@ -56,41 +57,32 @@ show_regression(asset_bmark_yield_df, "bmark", "bond")
 Disclaimer:  benchmarks and bonds now have low correlation _(remember:  correlation$^2 = R^2$)_ and are inversely related ($\beta < 0$)
 
 ```{r benchmark-bond relationships over time, echo=FALSE, fig.height=6}
-ggplot(melted_ts_combo, aes(end_date, value, colour = benchmark)) + 
-  geom_line() + 
-  ggtitle("Benchmarks vs Bond:  Beta & R-squared (4y monthly rolling)") + 
-  facet_wrap(~metric, ncol = 1, scales = "free_y") + 
-  theme(legend.position="bottom")
+ggplot(melted_ts_combo_au, aes(end_date, value)) +
+  geom_line() +
+  ggtitle("ASX 200 vs Aus Bond Index:  Beta & R-squared (3y monthly rolling)") +
+  facet_wrap( ~ metric, ncol = 1, scales = "free_y") +
+  theme(legend.position = "bottom") +
+  scale_x_date(date_labels = "%Y", date_breaks = "2 years")
 ```
 
 ## Why 3 years weekly?
 We tried all timespans from six months to five years, with daily, weekly and monthly frequencies:
 
 ```{r pfolio_rel_estimates_over_times, echo=FALSE, fig.height = 6}
-ggplot(df_ts_experiment, aes(months, pfolio_return_rel_bmark, colour = frequency)) + geom_line() + ggtitle("Next pfolio rel return if yield +100 bp:  model result by timespan and frequency")
+ggplot(df_ts_experiment, aes(months, pfolio_return_rel_bmark, colour = frequency)) +
+  geom_line() +
+  theme(legend.position = "bottom") +
+  ggtitle("Next pfolio rel return if yield +100 bp:  model result by timespan and frequency")
 ```
 
 ## Now the results:
-I compute this model for each stock in the global portfolios (GLUF and Global Pensions).  Then I shock the 10Y U.S. Treasury Yield by +100 bps and calculate the estimated return of your portfolio based on latest weights in the database.  I find:
+I compute this model for each stock in the AEF portfolios (code PCHEST).  Then I shock the 10Y Aus Bond Yield by +100 bps and calculate the estimated return of your portfolio based on latest weights in the database.  I find:
 
-- PCGLUF estimated return = `r paste(round(100 * df_portfolio_PCGLUF$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`.  
+- AEF estimated return = `r paste(round(100 * df_summary["AU 10Y Rate +100bp"],2), "%", sep = "")`.  
 
-- benchmark estimated return = `r paste(round(100 * df_portfolio_PCGLUF$bmark_return_delta_shock,2), "%", sep = "")`.  
+- ASX 200 estimated return = `r paste(round(100 * benchmark_returns["AU 10Y Rate +100bp"],2), "%", sep = "")`.  
 
-- Therefore, we estimate PCGLUF would underperform by `r paste(round(100 * (df_portfolio_PCGLUF$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGLUF$bmark_return_delta_shock),2), "%", sep = "")` in this scenario.
-
-Similarly, PCGPEN estimated return is `r paste(round(100 * df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted,2), "%", sep = "")`, or `r paste(round(100 * (df_portfolio_PCGPEN$pfolio_return_delta_shock_unadjusted_by_weighted - df_portfolio_PCGPEN$bmark_return_delta_shock),2), "%", sep = "")` relative the MSCI AC World Total Return Index.
-
-## Checks and biases as of 19 Feb 2017
-> "The fools are certain and the intelligent full of doubt." --- Bertrand Russell
-
-I also computed the model for _every stock in the MSCI AC World_:
-
-* **Internal consistency:** Benchmark estimated shocked return is 3.80% when computed in this way.  Compare this with 3.75% shocked return I got from our simpler linear model.
-
-* **Currency bias:** When I restrict my by-stock calculations to US stocks, my total shocked return of the MSCI US stocks is 4.5%.
-
-* **Industry groups:** Banks (+11.4%), Diversified Financials (+9.1%), Energy (+7.1%), Insurance (+6.7%), Automobiles (+6.5%) and Semiconductors (+6.4%) are the MSCI industry groups with the highest shocked returns.  Lowest are Utilities (-4.0%), Real Estate (-2.5%), Food/Beverage/Tobacco (-0.4%) and Household/Personal Products (+0.5%)
+- Therefore, we estimate AEF would underperform by `r paste(round(100 * (df_summary["AU 10Y Rate +100bp"] - benchmark_returns["AU 10Y Rate +100bp"]),2), "%", sep = "")` in this scenario.
 
 ## How the results changed through history
 
@@ -103,14 +95,7 @@ Similar to the _Interest Rate Factor Model_, I wrote other 2-factor models of th
 $$r_t = \alpha + \beta_B r_{B,t} + \beta_F r_{F,t} + \theta_t$$
 where $B$ is the benchmark equity index and the $F$ is another factor.  I've tried changes in _Brent Oil_, various currencies and a USD currency basket index (ticker _DXY-IFUS_ in FactSet).
 
-***Results are on the next page, but are better viewed in Excel***
-
-## Other shock models' results
-```{r, results='asis'}
-source('currency_shocks.R', echo=FALSE)
-pander::pander(df_formatted, split.cell = 15)
-```
-(there is a nicer version of this in Excel)
+***Results better viewed in Excel***
 
 ## How does this compare to Barra?
 ![I also computed the model over the same timeframe which Barra did for us a couple of months ago (October 2013 to October 2016)](./img/vs_Barra.png)
